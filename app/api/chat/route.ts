@@ -101,10 +101,7 @@ export async function POST(req: Request) {
     const { messages, group } = await req.json();
     const { tools: activeTools, systemPrompt } = await getGroupConfig(group);
 
-    const gemini = new Gemini({
-        apiKey: serverEnv.GEMINI_API_KEY!,
-        model: 'gemini-2.0-flash-exp'
-    });
+    const gemini = google('models/gemini-2.0-flash-exp', { apiKey: serverEnv.GEMINI_API_KEY! });
 
     const result = streamText({
         model: gemini,
@@ -197,11 +194,7 @@ export async function POST(req: Request) {
 
                     if (execution.results.length > 0) {
                         for (const result of execution.results) {
-                            if (result.isMainResult) {
-                                message += `${result.text}\n`;
-                            } else {
-                                message += `${result.text}\n`;
-                            }
+                            message += `${result.text}\n`;
                         }
                     }
 
@@ -319,6 +312,7 @@ export async function POST(req: Request) {
                                           const sanitizedUrl = sanitizeUrl(url);
                                           return (await isValidImageUrl(sanitizedUrl)) ? sanitizedUrl : null;
                                       })
+                                  )
                         };
                     });
 
@@ -701,11 +695,7 @@ export async function POST(req: Request) {
 
                     if (execution.results.length > 0) {
                         for (const result of execution.results) {
-                            if (result.isMainResult) {
-                                message += `${result.text}\n`;
-                            } else {
-                                message += `${result.text}\n`;
-                            }
+                            message += `${result.text}\n`;
                         }
                     }
 
