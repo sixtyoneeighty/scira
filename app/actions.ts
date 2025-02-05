@@ -15,7 +15,7 @@ export async function suggestQuestions(history: any[]) {
   const { object } = await generateObject({
     model: google("gemini-2.0-flash-exp"),
     temperature: 0.9,
-    maxTokens: 2020,
+    maxTokens: 8192,
     system:
       `You are a search engine query/questions generator. You 'have' to create only '3' questions for the search engine based on the message history which has been provided to you.
 The questions should be open-ended and should encourage further discussion while maintaining the whole context. Limit it to 5-10 words per question.

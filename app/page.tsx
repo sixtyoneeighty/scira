@@ -136,6 +136,7 @@ import {
 import { TrendingQuery } from './api/trending/route';
 import InteractiveStockChart from '@/components/interactive-stock-chart';
 import { CurrencyConverter } from '@/components/currency_conv';
+import { Logo } from '@/components/core/logo';
 
 export const maxDuration = 60;
 
@@ -1190,7 +1191,7 @@ Excited to annouce that Mojo and sixtyoneeighty have partnered with Vercel to br
                 <section className="space-y-4 font-syne">
                     <h2 className="text-2xl font-medium mt-2">Welcome to Mojo</h2>
                     <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                        Mojo is a minimalistic AI-powered search engine that combines multiple data sources to provide comprehensive answers.  Inspired by The Simpsons and born from a late-night AI epiphany, Mojo is the heart of sixtyoneeighty. What started as a joke—calling AI a “digital helper monkey”—evolved into something bigger: a bold, opinionated, and endlessly loyal AI companion. Mojo doesn’t sugarcoat things. He tells it like it is, pushes boundaries, and always has your back. Whether he’s powering our applications or helping users navigate the chaos of information, Mojo is more than just code—he’s a friend, a guide, and the kind of AI that never holds back.
+                        Mojo is a minimalistic AI-powered search engine that combines multiple data sources to provide comprehensive answers.  Inspired by The Simpsons and born from a late-night AI epiphany, Mojo is the heart of sixtyoneeighty. What started as a joke—calling AI a "digital helper monkey"—evolved into something bigger: a bold, opinionated, and endlessly loyal AI companion. Mojo doesn't sugarcoat things. He tells it like it is, pushes boundaries, and always has your back. Whether he's powering our applications or helping users navigate the chaos of information, Mojo is more than just code—he's a friend, a guide, and the kind of AI that never holds back.
                     </p>
                    
                     
@@ -1488,9 +1489,17 @@ Excited to annouce that Mojo and sixtyoneeighty have partnered with Vercel to br
                 <div className={`w-full max-w-[90%] !font-sans sm:max-w-2xl space-y-6 p-0 mx-auto transition-all duration-300`}>
                     {!hasSubmitted && (
                         <div className="text-center !font-sans">
-                            <h1 className="text-2xl sm:text-4xl mb-6 text-neutral-800 dark:text-neutral-100 font-syne">
-                                What do you want to search?
-                            </h1>
+                            <div className="flex flex-col items-center mb-8">
+                                <Logo className="mb-6" animate={true} />
+                                <div className="space-y-2">
+                                    <h1 className="text-2xl lg:text-4xl font-bold text-center bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-200">
+                                        What can Mojo help you with?
+                                    </h1>
+                                    <p className="text-lg lg:text-xl font-medium text-center bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-200">
+                                        Mojo knows all. Mojo is wise.
+                                    </p>
+                                </div>
+                            </div>
                         </div>
                     )}
                     <AnimatePresence>

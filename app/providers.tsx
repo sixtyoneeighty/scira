@@ -18,8 +18,8 @@ export function Providers({ children }: { children: ReactNode }) {
     <PostHogProvider client={posthog}>
       <ThemeProvider
         attribute="class"
-        defaultTheme="system"
-        enableSystem
+        defaultTheme="dark"
+        forcedTheme="dark"
         disableTransitionOnChange
       >
         {children}
