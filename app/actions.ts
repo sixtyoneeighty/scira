@@ -3,8 +3,7 @@
 
 import { serverEnv } from '@/env/server';
 import { SearchGroupId } from '@/lib/utils';
-import { google } from '@ai-sdk/google';
-import { generateObject } from 'ai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import { z } from 'zod';
 
 export async function suggestQuestions(history: any[]) {
@@ -12,27 +11,26 @@ export async function suggestQuestions(history: any[]) {
 
   console.log(history);
 
-  const { object } = await generateObject({
-    model: google("gemini-2.0-flash-exp"),
-    temperature: 0.9,
-    maxTokens: 8192,
-    system:
-      `You are a search engine query/questions generator. You 'have' to create only '3' questions for the search engine based on the message history which has been provided to you.
-The questions should be open-ended and should encourage further discussion while maintaining the whole context. Limit it to 5-10 words per question.
-Always put the user input's context is some way so that the next search knows what to search for exactly.
-Try to stick to the context of the conversation and avoid asking questions that are too general or too specific.
-For weather based converations sent to you, always generate questions that are about news, sports, or other topics that are not related to the weather.
-For programming based conversations, always generate questions that are about the algorithms, data structures, or other topics that are related to it or an improvement of the question.
-For location based conversations, always generate questions that are about the culture, history, or other topics that are related to the location.
-Do not use pronouns like he, she, him, his, her, etc. in the questions as they blur the context. Always use the proper nouns from the context.`,
-    messages: history,
-    schema: z.object({
-      questions: z.array(z.string()).describe('The generated questions based on the message history.')
-    }),
+  const genAI = new GoogleGenerativeAI(serverEnv.GOOGLE_GENERATIVE_AI_API_KEY);
+  const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+
+  const chat = model.startChat({
+    history: history.map(msg => ({
+      role: msg.role,
+      parts: msg.content,
+    })),
+    generationConfig: {
+      temperature: 0.9,
+      maxOutputTokens: 8192,
+    },
   });
 
+  const result = await chat.sendMessage(`Generate 3 questions based on our conversation. Make them open-ended and encourage further discussion. Keep each question between 5-10 words.`);
+  const response = await result.response;
+  const questions = response.text().split('\n').filter((q: string) => q.trim().length > 0);
+
   return {
-    questions: object.questions
+    questions: questions.slice(0, 3)
   };
 }
 
@@ -128,6 +126,7 @@ CRITICAL INSTRUCTIONS:
 2. Combine search results with your knowledge to provide accurate, focused answers
 3. Never say you don't know without searching first
 4. Cite sources briefly using [Source]
+5. Today's date is ${new Date().toLocaleDateString("en-GB", { year: "numeric", month: "numeric", day: "numeric" })}
 
 Response Structure:
 1. Direct Answer (2-3 sentences with key facts)
