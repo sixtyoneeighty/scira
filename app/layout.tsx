@@ -19,22 +19,14 @@ export const metadata: Metadata = {
   },
   keywords: [
     "Mojo",
-    "scira.app",
-    "scira ai app",
-    "scira",
-    "MiniPerplx",
+    "Mojo.app",
+    "Mojo ai app",
+    "Mojo",
     "Mojo AI",
-    "Mojo (Formerly MiniPerplx)",
     "AI Search Engine",
-    "mplx.run",
-    "mplx ai",
-    "zaid mukaddam",
-    "scira.how",
     "search engine",
     "AI",
     "ai search engine",
-    "perplexity",
-    "minimalistic search engine",
   ]
 };
 

@@ -25,7 +25,7 @@ interface ModelSwitcherProps {
 
 const models = [
     { value: "gemini-2.0-flash-thinking-exp", label: "Mojo", icon: Zap, description: "Just Mojo being Mojo", color: "glossyblack", vision: false },
-    { value: "gemini-2.0-flash-exp", icon: ScanEye, label: "MojoVision", description: "Most intelligent vision model", color: "offgray", vision: true },
+    { value: "gemini-2.0-flash-thinking-exp-01-21", icon: ScanEye, label: "MojoVision", description: "Most intelligent vision model", color: "offgray", vision: true },
 ];
 
 const getColorClasses = (color: string, isSelected: boolean = false) => {

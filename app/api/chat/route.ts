@@ -153,7 +153,7 @@ export async function POST(req: Request) {
             throw new Error('GOOGLE_GENERATIVE_AI_API_KEY is not configured');
         }
 
-        const model = google('gemini-2.0-flash-exp', {
+        const model = google('gemini-2.0-flash-thinking-exp', {
             safetySettings: [
                 { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
                 { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },

@@ -66,7 +66,7 @@ const { isLoading, input, messages, setInput, append, handleSubmit, setMessages,
 
 2\. \*\*\`body: { model: selectedModel, group: selectedGroup }\`\*\*:  
     \*   You are correctly passing the \`model\` and \`group\` to your API route.  
-    \*   \*\*\`selectedModel\`\*\*: You have \`gemini-2.0-flash-exp\` as the default. Ensure this model is available in your environment. The documentation might refer to a different model name.  
+    \*   \*\*\`selectedModel\`\*\*: You have \`gemini-2.0-flash-thinking-exp-01-21\` as the default. Ensure this model is available in your environment. The documentation might refer to a different model name.  
     \*   \*\*\`group\`\*\*: This is a custom parameter you are using to select the appropriate tools and system prompt. This is a good approach for organizing your logic.
 
 3\. \*\*\`onFinish\`\*\*:  
@@ -87,14 +87,14 @@ The Vercel AI SDK guide for Gemini provides examples for setting up the provider
     // In your API route (e.g., app/api/chat/route.ts)  
     import { google } from '@ai-sdk/google';
 
-    const model \= google('gemini-2.0-flash-exp', { // Or your chosen model  
+    const model \= google('gemini-2.0-flash-thinking-exp-01-21', { // Or your chosen model  
         apiKey: serverEnv.GEMINI\_API\_KEY,  
         // ... other options  
     });  
     \`\`\`
 
     \*   You are correctly initializing the \`google\` provider with your API key.  
-    \*   \*\*Model Name:\*\* Double-check that \`gemini-2.0-flash-exp\` is the correct model name. The guide might use \`gemini-2.0-flash-exp\` or a similar name.
+    \*   \*\*Model Name:\*\* Double-check that \`gemini-2.0-flash-thinking-exp-01-21\` is the correct model name. The guide might use \`gemini-2.0-flash-thinking-exp-01-21\` or a similar name.
 
 2\. \*\*Using the Model with \`streamText\`:\*\*
 
@@ -139,7 +139,7 @@ export default function SimpleChat() {
   const { messages, input, handleInputChange, handleSubmit } \= useChat({  
     api: '/api/chat', // Your API route  
     body: {  
-      model: 'gemini-2.0-flash-exp', // Use the model name from the guide  
+      model: 'gemini-2.0-flash-thinking-exp-01-21', // Use the model name from the guide  
     },  
   });
 
@@ -174,7 +174,7 @@ import { serverEnv } from '@/env/server';
 export async function POST(req: Request) {  
   const { messages, model } \= await req.json();
 
-  const gemini \= google('gemini-2.0-flash-exp', {  
+  const gemini \= google('gemini-2.0-flash-thinking-exp-01-21', {  
     apiKey: serverEnv.GEMINI\_API\_KEY,  
   });
 

@@ -13,7 +13,7 @@ export async function suggestQuestions(history: any[]) {
   console.log(history);
 
   const { object } = await generateObject({
-    model: google("gemini-2.0-flash-exp"),
+    model: google("gemini-2.0-flash-thinking-exp-01-21"),
     temperature: 0.9,
     maxTokens: 8192,
     system:
