@@ -97,8 +97,34 @@ async function isValidImageUrl(url: string): Promise<boolean> {
     }
 }
 
+function errorHandler(error: unknown) {
+    if (error == null) {
+        return 'unknown error';
+    }
+
+    if (typeof error === 'string') {
+        return error;
+    }
+
+    if (error instanceof Error) {
+        // Log the entire error object to your server logs for debugging
+        console.error("[API] Error details:", {
+            name: error.name,
+            message: error.message,
+            stack: error.stack,
+            cause: error.cause
+        });
+        return error.message; // Return only the message to the client
+    }
+
+    return JSON.stringify(error);
+}
+
 export async function POST(req: Request) {
     try {
+        // Log request details
+        console.log("[API] Request headers:", Object.fromEntries(req.headers.entries()));
+        
         if (!req.body) {
             throw new Error('Request body is empty');
         }
@@ -106,6 +132,9 @@ export async function POST(req: Request) {
         const { messages, group } = await req.json().catch(() => {
             throw new Error('Failed to parse request body as JSON');
         });
+
+        console.log("[API] Received messages:", messages);
+        console.log("[API] Selected group:", group);
 
         if (!messages || !Array.isArray(messages)) {
             throw new Error('Invalid messages format');
@@ -116,7 +145,7 @@ export async function POST(req: Request) {
         }
 
         const { tools: activeTools, systemPrompt } = await getGroupConfig(group).catch((error) => {
-            console.error('Failed to get group config:', error);
+            console.error('[API] Failed to get group config:', error);
             throw new Error('Failed to load configuration');
         });
 
@@ -133,6 +162,8 @@ export async function POST(req: Request) {
                 { category: 'HARM_CATEGORY_CIVIC_INTEGRITY', threshold: 'BLOCK_NONE' },
             ],
         });
+
+        console.log("[API] Model initialized");
 
         const result = streamText({
             model,
@@ -1226,33 +1257,33 @@ export async function POST(req: Request) {
             },
             onChunk(event) {
                 if (event.chunk.type === 'tool-call') {
-                    console.log('Called Tool: ', event.chunk.toolName);
+                    console.log('[API] Tool called:', event.chunk.toolName);
                 }
             },
             onStepFinish(event) {
                 if (event.warnings) {
-                    console.warn('Step warnings:', event.warnings);
+                    console.warn('[API] Step warnings:', event.warnings);
                 }
             },
             onFinish(event) {
                 if (event.finishReason === 'error') {
-                    console.error('Stream finished with error:', event.response);
+                    console.error('[API] Stream finished with error:', event.response);
                 } else {
-                    console.log('Fin reason:', event.finishReason);
-                    console.log('Steps:', event.steps);
-                    console.log('Messages:', event.response.messages[event.response.messages.length - 1].content);
+                    console.log('[API] Finish reason:', event.finishReason);
+                    console.log('[API] Steps:', event.steps);
                 }
             },
         });
 
         try {
-            return result.toDataStreamResponse();
+            console.log("[API] Creating stream response");
+            return result.toDataStreamResponse({ getErrorMessage: errorHandler });
         } catch (error) {
-            console.error('Failed to create stream response:', error);
+            console.error('[API] Failed to create stream response:', error);
             throw new Error('Failed to create response stream');
         }
     } catch (error) {
-        console.error('Chat route error:', error);
+        console.error('[API] Chat route error:', error);
         
         // Enhanced error handling with specific error types
         let statusCode = 500;
@@ -1317,7 +1348,7 @@ export async function POST(req: Request) {
         };
 
         // Log the error details for debugging
-        console.error('Error details:', {
+        console.error('[API] Error details:', {
             ...errorResponse,
             stack: error instanceof Error ? error.stack : undefined,
         });

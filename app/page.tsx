@@ -766,30 +766,21 @@ const HomeContent = () => {
             });
 
             // Check for specific error types
-            if (error instanceof TypeError) {
-                console.error('Type Error - likely a streaming or parsing issue');
-            }
-            
-            if ('cause' in error) {
-                console.error('Error Cause:', error.cause);
-            }
-
-            // If it's a response error, log response details
             if ('response' in error) {
-                const responseError = error as any;
+                const chatError = error as ChatError;
                 console.error('Response Error:', {
-                    status: responseError.response?.status,
-                    statusText: responseError.response?.statusText,
-                    data: responseError.response?.data,
+                    status: chatError.response?.status,
+                    statusText: chatError.response?.statusText,
+                    data: chatError.response?.data,
                 });
             }
 
-            // If it's a network error, log request details
+            // Log request details if available
             if ('request' in error) {
-                const networkError = error as any;
-                console.error('Network Error:', {
-                    method: networkError.request?.method,
-                    url: networkError.request?.url,
+                const chatError = error as ChatError;
+                console.error('Request Details:', {
+                    method: chatError.request?.method,
+                    url: chatError.request?.url,
                 });
             }
 
@@ -811,6 +802,12 @@ const HomeContent = () => {
             } else if (error.message.includes('validation')) {
                 errorMessage = 'Invalid input';
                 errorDescription = 'Please check your input and try again.';
+            } else if (error.message.includes('configuration')) {
+                errorMessage = 'Configuration error';
+                errorDescription = 'There was a problem with the service configuration. Please try again later.';
+            } else if (error.message.includes('authentication')) {
+                errorMessage = 'Authentication error';
+                errorDescription = 'There was a problem with the service authentication. Please try again later.';
             } else {
                 errorDescription = error.message || 'An unexpected error occurred.';
             }
