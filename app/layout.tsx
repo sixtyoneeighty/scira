@@ -8,6 +8,8 @@ import { NuqsAdapter } from 'nuqs/adapters/next/app';
 import { Toaster } from "sonner";
 import "./globals.css";
 import { Providers } from './providers';
+import { WelcomePopup } from './components/welcome-popup';
+import { SupportMailButton } from './components/support-mail-button';
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://mojo.sixtyoneeightyai.com"),
@@ -56,7 +58,9 @@ export default function RootLayout({
         <NuqsAdapter>
           <Providers>
             <Toaster position="top-center" richColors />
+            <WelcomePopup />
             {children}
+            <SupportMailButton />
           </Providers>
         </NuqsAdapter>
         <Analytics />
