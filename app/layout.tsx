@@ -15,6 +15,13 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://mojo.sixtyoneeightyai.com"),
   title: "Mojo",
   description: "Mojo is a minimalistic AI-powered search engine that helps you find information on the internet.",
+  manifest: "/manifest.json",
+  themeColor: "#000000",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Mojo",
+  },
   openGraph: {
     url: "https://mojo.sixtyoneeightyai.com",
     siteName: "Mojo",

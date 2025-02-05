@@ -1,6 +1,7 @@
 // https://env.t3.gg/docs/nextjs#validate-schema-on-build-(recommended)
 import { createJiti } from 'jiti'
 import { fileURLToPath } from 'node:url'
+import withPWA from 'next-pwa'
 const jiti = createJiti(fileURLToPath(import.meta.url))
 
 // Import env here to validate during build. Using jiti we can import .ts files :)
@@ -130,4 +131,9 @@ const nextConfig = {
     }
 };
 
-export default nextConfig;
+export default withPWA({
+    dest: 'public',
+    register: true,
+    skipWaiting: true,
+    disable: process.env.NODE_ENV === 'development'
+})(nextConfig);
