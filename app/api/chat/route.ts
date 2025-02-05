@@ -101,10 +101,18 @@ export async function POST(req: Request) {
     const { messages, group } = await req.json();
     const { tools: activeTools, systemPrompt } = await getGroupConfig(group);
 
-    const gemini = google('models/gemini-2.0-flash-exp', { apiKey: serverEnv.GEMINI_API_KEY! });
+    const model = google('gemini-2.0-flash-exp', {
+        safetySettings: [
+            { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+            { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
+            { category: 'VHARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
+            { category: 'ARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+            { category: 'HARM_CATEGORY_CIVIC_INTEGRITY', threshold: 'BLOCK_NONE' },
+        ],
+    });
 
     const result = streamText({
-        model: gemini,
+        model: model,
         messages: convertToCoreMessages(messages),
         experimental_transform: smoothStream({
             chunking: 'word',
@@ -194,7 +202,11 @@ export async function POST(req: Request) {
 
                     if (execution.results.length > 0) {
                         for (const result of execution.results) {
-                            message += `${result.text}\n`;
+                            if (result.isMainResult) {
+                                message += `${result.text}\n`;
+                            } else {
+                                message += `${result.text}\n`;
+                            }
                         }
                     }
 
@@ -312,7 +324,6 @@ export async function POST(req: Request) {
                                           const sanitizedUrl = sanitizeUrl(url);
                                           return (await isValidImageUrl(sanitizedUrl)) ? sanitizedUrl : null;
                                       })
-                                  )
                         };
                     });
 
@@ -695,7 +706,11 @@ export async function POST(req: Request) {
 
                     if (execution.results.length > 0) {
                         for (const result of execution.results) {
-                            message += `${result.text}\n`;
+                            if (result.isMainResult) {
+                                message += `${result.text}\n`;
+                            } else {
+                                message += `${result.text}\n`;
+                            }
                         }
                     }
 
