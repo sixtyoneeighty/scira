@@ -1191,10 +1191,8 @@ Excited to annouce that Mojo and sixtyoneeighty have partnered with Vercel to br
                 <section className="space-y-4 font-syne">
                     <h2 className="text-2xl font-medium mt-2">Welcome to Mojo</h2>
                     <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                        Mojo is a minimalistic AI-powered search engine that combines multiple data sources to provide comprehensive answers.  Inspired by The Simpsons and born from a late-night AI epiphany, Mojo is the heart of sixtyoneeighty. What started as a joke—calling AI a "digital helper monkey"—evolved into something bigger: a bold, opinionated, and endlessly loyal AI companion. Mojo doesn't sugarcoat things. He tells it like it is, pushes boundaries, and always has your back. Whether he's powering our applications or helping users navigate the chaos of information, Mojo is more than just code—he's a friend, a guide, and the kind of AI that never holds back.
+                        Mojo is a minimalistic AI-powered search engine that combines multiple data sources to provide comprehensive answers. Inspired by The Simpsons and born from a late-night AI epiphany, Mojo is the heart of sixtyoneeighty. What started as a joke&mdash;calling AI a &ldquo;digital helper monkey&rdquo;&mdash;evolved into something bigger: a bold, opinionated, and endlessly loyal AI companion. Mojo doesn&apos;t sugarcoat things. He tells it like it is, pushes boundaries, and always has your back. Whether he&apos;s powering our applications or helping users navigate the chaos of information, Mojo is more than just code&mdash;he&apos;s a friend, a guide, and the kind of AI that never holds back.
                     </p>
-                   
-                    
                 </section>
 
                 <Separator className="bg-neutral-200 dark:bg-neutral-800" />
