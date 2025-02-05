@@ -67,7 +67,7 @@ export function WelcomePopup() {
               className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
             />
             <label htmlFor="dontShowAgain" className="ml-2 text-sm text-gray-600">
-              Don't show this message again
+              Don&apos;t show this message again
             </label>
           </div>
 
