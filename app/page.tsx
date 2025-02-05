@@ -723,17 +723,47 @@ const HomeContent = () => {
                 setSuggestedQuestions(questions);
             }
         },
-        onError: (error) => {
-            console.error("Chat error details:", {
-                error,
-                name: error.name,
-                message: error.message,
-                cause: error.cause,
-                stack: error.stack
+        onError: (error: unknown) => {
+            // Log the complete error object and all its properties
+            console.group('Chat Error Details');
+            console.error('Full Error Object:', error);
+            
+            // Safely type check the error object
+            const errorObj = error as Error & {
+                statusCode?: number;
+                response?: unknown;
+                request?: unknown;
+                config?: unknown;
+            };
+
+            console.error('Error Properties:', {
+                name: errorObj.name,
+                message: errorObj.message,
+                cause: errorObj.cause,
+                stack: errorObj.stack,
+                statusCode: errorObj.statusCode,
+                response: errorObj.response,
+                request: errorObj.request,
+                config: errorObj.config,
             });
             
+            // Log additional context
+            console.error('Error Context:', {
+                timestamp: new Date().toISOString(),
+                model: selectedModel,
+                group: selectedGroup,
+                lastQuery: lastSubmittedQueryRef.current,
+                messagesCount: messages.length,
+            });
+            console.groupEnd();
+
+            // Show a more detailed error message to the user
+            const errorDetail = errorObj.message || (errorObj.cause as Error)?.message || errorObj.statusCode 
+                ? `${errorObj.statusCode ? `Status: ${errorObj.statusCode}. ` : ''}${errorObj.message || (errorObj.cause as Error)?.message}`
+                : 'No detailed information available';
+            
             toast.error("An error occurred", {
-                description: `Oops! An error occurred while processing your request. ${error.message || error.cause || 'No further information available.'}`,
+                description: `Oops! An error occurred while processing your request. ${errorDetail}`,
                 duration: 5000,
             });
         },
@@ -1312,9 +1342,8 @@ Excited to annouce that Mojo and sixtyoneeighty have partnered with Vercel to br
                         </Button>
                     </Link>
                 </div>
-                <div className='flex items-center space-x-4'>
+                <div className='flex items-center'>
                     <AboutButton />
-                    <ThemeToggle />
                 </div>
             </div>
         );
@@ -1703,12 +1732,9 @@ Excited to annouce that Mojo and sixtyoneeighty have partnered with Vercel to br
                 </AnimatePresence>
                 {!hasSubmitted && (
                     <footer
-                        className="flex flex-row justify-between items-center bottom-3 w-full fixed p-4 sm:p-auto"
+                        className="flex justify-end items-center bottom-3 w-full fixed p-4 sm:p-auto"
                     >
-                        <div className="text-sm text-neutral-500 dark:text-neutral-400">
-                            © {new Date().getFullYear()} All rights reserved.
-                        </div>
-                        <div className="footer">
+                        <div className="text-xs text-neutral-500 dark:text-neutral-400">
                             © {new Date().getFullYear()} All rights reserved.
                         </div>
                     </footer>
