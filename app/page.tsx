@@ -709,6 +709,28 @@ const HomeContent = () => {
 
     const [trendingQueries, setTrendingQueries] = useState<TrendingQuery[]>([]);
 
+    interface ChatError extends Error {
+        response?: {
+            status?: number;
+            statusText?: string;
+            data?: unknown;
+            headers?: unknown;
+        };
+        request?: {
+            method?: string;
+            url?: string;
+            headers?: unknown;
+        };
+        config?: unknown;
+        code?: string;
+        isAxiosError?: boolean;
+    }
+
+    interface ChatErrorContext {
+        message?: string;
+        [key: string]: unknown;
+    }
+
     const { isLoading, input, messages, setInput, append, handleSubmit, setMessages, reload, stop } = useChat({
         maxSteps: 8,
         body: {
@@ -723,47 +745,65 @@ const HomeContent = () => {
                 setSuggestedQuestions(questions);
             }
         },
-        onError: (error: unknown) => {
-            // Log the complete error object and all its properties
+        onError: (error: ChatError, context?: ChatErrorContext) => {
+            // Create a detailed error log group
             console.group('Chat Error Details');
-            console.error('Full Error Object:', error);
             
-            // Safely type check the error object
-            const errorObj = error as Error & {
-                statusCode?: number;
-                response?: unknown;
-                request?: unknown;
-                config?: unknown;
-            };
-
-            console.error('Error Properties:', {
-                name: errorObj.name,
-                message: errorObj.message,
-                cause: errorObj.cause,
-                stack: errorObj.stack,
-                statusCode: errorObj.statusCode,
-                response: errorObj.response,
-                request: errorObj.request,
-                config: errorObj.config,
+            // Log the complete error object and context
+            console.error('Error Object:', {
+                error,
+                name: error?.name,
+                message: error?.message,
+                stack: error?.stack,
+                cause: error?.cause
             });
-            
-            // Log additional context
+
+            // Log the error context
             console.error('Error Context:', {
+                context,
                 timestamp: new Date().toISOString(),
                 model: selectedModel,
                 group: selectedGroup,
                 lastQuery: lastSubmittedQueryRef.current,
-                messagesCount: messages.length,
+                messagesCount: messages.length
             });
+
+            // If there's a response object, log it
+            if (error.response) {
+                console.error('Response Details:', {
+                    status: error.response.status,
+                    statusText: error.response.statusText,
+                    data: error.response.data,
+                    headers: error.response.headers
+                });
+            }
+
+            // If there's a request object, log it
+            if (error.request) {
+                console.error('Request Details:', {
+                    method: error.request.method,
+                    url: error.request.url,
+                    headers: error.request.headers
+                });
+            }
+
+            // Check for network errors
+            if (error.isAxiosError) {
+                console.error('Network Error:', {
+                    isAxiosError: true,
+                    config: error.config,
+                    code: error.code
+                });
+            }
+
             console.groupEnd();
 
-            // Show a more detailed error message to the user
-            const errorDetail = errorObj.message || (errorObj.cause as Error)?.message || errorObj.statusCode 
-                ? `${errorObj.statusCode ? `Status: ${errorObj.statusCode}. ` : ''}${errorObj.message || (errorObj.cause as Error)?.message}`
-                : 'No detailed information available';
+            // Show a user-friendly error message with as much detail as appropriate
+            const errorMessage = error.message || (error.cause as Error)?.message || context?.message || 'No further details available.';
+            const statusCode = error.response?.status ? ` (Status: ${error.response.status})` : '';
             
             toast.error("An error occurred", {
-                description: `Oops! An error occurred while processing your request. ${errorDetail}`,
+                description: `Oops! ${errorMessage}${statusCode}`,
                 duration: 5000,
             });
         },
