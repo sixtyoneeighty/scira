@@ -15,6 +15,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { cn } from "@/lib/utils";
+import MarkdownRenderer from "@/components/markdown-render";
 
 type SearchImage = {
     url: string;
@@ -37,6 +38,8 @@ type SearchQueryResult = {
 
 type MultiSearchResponse = {
     searches: SearchQueryResult[];
+    markdown: string;
+    llmResponse: string;
 };
 
 type MultiSearchArgs = {
@@ -339,6 +342,16 @@ const MultiSearch: React.FC<{ result: MultiSearchResponse | null; args: MultiSea
 
     return (
         <div className="w-full space-y-4">
+            {/* LLM Response Section */}
+            {result.llmResponse && (
+                <div className="bg-white dark:bg-neutral-900 rounded-xl border border-neutral-200 dark:border-neutral-800 shadow-sm p-4">
+                    <div className="prose dark:prose-invert max-w-none">
+                        <MarkdownRenderer content={result.llmResponse} />
+                    </div>
+                </div>
+            )}
+
+            {/* Search Results Accordion */}
             <Accordion type="single" collapsible defaultValue="search" className="w-full">
                 <AccordionItem value="search" className="border-none">
                     <AccordionTrigger
