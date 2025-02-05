@@ -120,6 +120,55 @@ function errorHandler(error: unknown) {
     return JSON.stringify(error);
 }
 
+function mode(arr: any[]): any {
+    return arr.reduce((a, b, i, arr) =>
+        (arr.filter(v => v === a).length >= arr.filter(v => v === b).length ? a : b), arr[0]);
+}
+
+const formatters = {
+    temperature: (temp: number) => `${Math.round(temp)}°F`,
+    distance: (meters: number) => `${(meters / 1609.34).toFixed(1)} miles`,
+    price: (level: string) => level || 'Price not available',
+    rating: (rating: number) => `${rating} ★`,
+    percentage: (value: number) => `${Math.round(value)}%`,
+    date: (timestamp: number) => new Date(timestamp * 1000).toLocaleDateString(),
+    time: (timestamp: number) => new Date(timestamp * 1000).toLocaleTimeString(),
+};
+
+interface ResponseTemplate {
+    summary: string;
+    details: Record<string, any>;
+    markdown?: string;
+}
+
+function createMarkdownResponse(template: ResponseTemplate): string {
+    let markdown = `## ${template.summary}\n\n`;
+    
+    if (template.details) {
+        Object.entries(template.details).forEach(([section, data]) => {
+            markdown += `### ${section}\n`;
+            if (Array.isArray(data)) {
+                data.forEach((item: any) => {
+                    markdown += `- ${item}\n`;
+                });
+            } else if (typeof data === 'object') {
+                Object.entries(data).forEach(([key, value]) => {
+                    markdown += `- **${key}**: ${value}\n`;
+                });
+            } else {
+                markdown += `${data}\n`;
+            }
+            markdown += '\n';
+        });
+    }
+
+    if (template.markdown) {
+        markdown += template.markdown;
+    }
+
+    return markdown;
+}
+
 export async function POST(req: Request) {
     try {
         // Log request details
@@ -782,15 +831,102 @@ export async function POST(req: Request) {
                         
                         const { lat, lon } = geoData[0];
                         
-                        // Get weather data using coordinates
-                        const weatherResponse = await fetch(
+                        // Get current weather
+                        const currentWeatherResponse = await fetch(
+                            `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=imperial`
+                        );
+                        const currentWeather = await currentWeatherResponse.json();
+                        
+                        // Get forecast data
+                        const forecastResponse = await fetch(
                             `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}&units=imperial`
                         );
-                        const weatherData = await weatherResponse.json();
+                        const forecastData = await forecastResponse.json();
+
+                        // Process current weather
+                        const current = {
+                            temperature: Math.round(currentWeather.main.temp),
+                            feels_like: Math.round(currentWeather.main.feels_like),
+                            conditions: currentWeather.weather[0].main,
+                            description: currentWeather.weather[0].description,
+                            humidity: currentWeather.main.humidity,
+                            wind_speed: Math.round(currentWeather.wind.speed),
+                            wind_direction: currentWeather.wind.deg,
+                            sunrise: new Date(currentWeather.sys.sunrise * 1000).toLocaleTimeString(),
+                            sunset: new Date(currentWeather.sys.sunset * 1000).toLocaleTimeString(),
+                        };
+
+                        // Process forecast data
+                        const forecast = forecastData.list.reduce((acc: any[], item: any) => {
+                            const date = new Date(item.dt * 1000);
+                            const day = date.toLocaleDateString('en-US', { weekday: 'long' });
+                            const time = date.toLocaleTimeString('en-US', { hour: 'numeric' });
+                            
+                            acc.push({
+                                day,
+                                time,
+                                temperature: Math.round(item.main.temp),
+                                feels_like: Math.round(item.main.feels_like),
+                                conditions: item.weather[0].main,
+                                description: item.weather[0].description,
+                                humidity: item.main.humidity,
+                                wind_speed: Math.round(item.wind.speed),
+                                precipitation_chance: Math.round(item.pop * 100),
+                            });
+                            
+                            return acc;
+                        }, []);
+
+                        // Group forecast by day
+                        const dailyForecasts = forecast.reduce((acc: any, item: any) => {
+                            if (!acc[item.day]) {
+                                acc[item.day] = {
+                                    temperatures: [],
+                                    conditions: [],
+                                    precipitation_chances: [],
+                                };
+                            }
+                            acc[item.day].temperatures.push(item.temperature);
+                            acc[item.day].conditions.push(item.conditions);
+                            acc[item.day].precipitation_chances.push(item.precipitation_chance);
+                            return acc;
+                        }, {});
+
+                        // Calculate daily summaries
+                        const dailySummaries = Object.entries(dailyForecasts).map(([day, data]: [string, any]) => ({
+                            day,
+                            high: Math.max(...data.temperatures),
+                            low: Math.min(...data.temperatures),
+                            dominant_conditions: mode(data.conditions),
+                            max_precipitation_chance: Math.max(...data.precipitation_chances),
+                        }));
+
+                        // Create natural language summaries
+                        const currentSummary = `Currently ${current.temperature}°F, feels like ${current.feels_like}°F, with ${current.description}. Humidity is ${current.humidity}% with wind speed of ${current.wind_speed} mph.`;
                         
+                        const forecastSummary = `5-day forecast shows temperatures ranging from ${Math.min(...dailySummaries.map(d => d.low))}°F to ${Math.max(...dailySummaries.map(d => d.high))}°F, with ${dailySummaries[0].dominant_conditions.toLowerCase()} conditions expected for ${dailySummaries[0].day}.`;
+
                         return {
-                            ...weatherData,
-                            city_details: geoData[0]
+                            location: {
+                                name: geoData[0].name,
+                                country: geoData[0].country,
+                                state: geoData[0].state,
+                                coordinates: { lat, lon },
+                            },
+                            current: {
+                                ...current,
+                                summary: currentSummary,
+                            },
+                            forecast: {
+                                hourly: forecast,
+                                daily: dailySummaries,
+                                summary: forecastSummary,
+                            },
+                            units: {
+                                temperature: "Fahrenheit",
+                                wind_speed: "mph",
+                                precipitation: "percentage"
+                            }
                         };
                     },
                 }),
@@ -881,39 +1017,134 @@ export async function POST(req: Request) {
 
                                     const reviews = await reviewsResponse.json();
 
-                                    // Combine all information
+                                    // Format price level for readability
+                                    const priceText = business.price ? business.price : 'Price not available';
+                                    
+                                    // Format categories
+                                    const categoryText = business.categories
+                                        ?.map((cat: any) => cat.title)
+                                        .join(', ') || 'Categories not available';
+
+                                    // Format address
+                                    const address = business.location?.display_address?.join(', ') || 'Address not available';
+
+                                    // Format distance
+                                    const distance = business.distance 
+                                        ? `${(business.distance / 1609.34).toFixed(1)} miles away`
+                                        : 'Distance not available';
+
+                                    // Format hours
+                                    const currentDay = new Date().getDay();
+                                    const todayHours = details.hours?.[0]?.open
+                                        ?.find((day: any) => day.day === currentDay);
+                                    
+                                    const formatTime = (time: string) => {
+                                        const hour = parseInt(time.slice(0, 2));
+                                        const minute = time.slice(2);
+                                        return `${hour % 12 || 12}:${minute} ${hour < 12 ? 'AM' : 'PM'}`;
+                                    };
+
+                                    const hoursText = todayHours
+                                        ? `Open today ${formatTime(todayHours.start)} - ${formatTime(todayHours.end)}`
+                                        : business.is_closed
+                                            ? 'Closed now'
+                                            : 'Hours not available';
+
+                                    // Format top review
+                                    const topReview = reviews.reviews?.[0] ? {
+                                        text: reviews.reviews[0].text,
+                                        rating: reviews.reviews[0].rating,
+                                        time_created: reviews.reviews[0].time_created,
+                                        username: reviews.reviews[0].user.name
+                                    } : null;
+
+                                    // Create a natural language summary
+                                    const summary = `${business.name} is a ${categoryText} establishment ${distance}. ${
+                                        business.rating
+                                    } stars from ${business.review_count} reviews. ${priceText}. ${hoursText}. Located at ${address}.`;
+
+                                    // Return formatted data
                                     return {
-                                        id: business.id,
-                                        name: business.name,
-                                        url: business.url,
-                                        phone: business.phone,
-                                        rating: business.rating,
-                                        price: business.price,
-                                        review_count: business.review_count,
-                                        categories: business.categories,
-                                        coordinates: business.coordinates,
-                                        location: business.location,
+                                        basic_info: {
+                                            id: business.id,
+                                            name: business.name,
+                                            summary,
+                                            rating: business.rating,
+                                            review_count: business.review_count,
+                                            price: priceText,
+                                            categories: categoryText,
+                                            distance,
+                                            is_closed: business.is_closed,
+                                        },
+                                        location: {
+                                            address,
+                                            coordinates: business.coordinates,
+                                            neighborhood: business.location?.neighborhood,
+                                        },
+                                        contact: {
+                                            phone: business.phone,
+                                            url: business.url,
+                                        },
+                                        hours: {
+                                            status: hoursText,
+                                            full_hours: details.hours?.[0]?.open || [],
+                                            special_hours: details.special_hours || [],
+                                        },
                                         photos: details.photos || [],
-                                        hours: details.hours || [],
-                                        special_hours: details.special_hours || [],
-                                        reviews: reviews.reviews || [],
-                                        is_claimed: details.is_claimed,
-                                        is_closed: business.is_closed,
-                                        distance: business.distance,
-                                        transactions: business.transactions,
-                                        messaging: details.messaging || {},
-                                        attributes: details.business_attributes || {},
+                                        featured_review: topReview,
+                                        additional_info: {
+                                            transactions: business.transactions,
+                                            attributes: details.business_attributes || {},
+                                        }
                                     };
                                 } catch (error) {
                                     console.error(`Error fetching details for ${business.id}:`, error);
-                                    return business; // Return basic information if details fetch fails
+                                    // Return basic formatted information if details fetch fails
+                                    return {
+                                        basic_info: {
+                                            id: business.id,
+                                            name: business.name,
+                                            summary: `${business.name} is a ${business.categories?.map((cat: any) => cat.title).join(', ') || 'business'} with ${business.rating} stars from ${business.review_count} reviews.`,
+                                            rating: business.rating,
+                                            review_count: business.review_count,
+                                            price: business.price || 'Price not available',
+                                            categories: business.categories?.map((cat: any) => cat.title).join(', ') || 'Categories not available',
+                                            distance: business.distance ? `${(business.distance / 1609.34).toFixed(1)} miles away` : 'Distance not available',
+                                            is_closed: business.is_closed,
+                                        },
+                                        location: {
+                                            address: business.location?.display_address?.join(', ') || 'Address not available',
+                                            coordinates: business.coordinates,
+                                        },
+                                        contact: {
+                                            phone: business.phone,
+                                            url: business.url,
+                                        }
+                                    };
                                 }
                             }));
 
+                            // Create a summary of the search results
+                            const searchSummary = `Found ${data.total} ${term || 'restaurants/businesses'} in ${location}${
+                                price ? ` with price level ${price}` : ''
+                            }${categories ? ` in categories: ${categories}` : ''
+                            }${open_now ? ', currently open' : ''
+                            }${radius ? `, within ${(radius / 1609.34).toFixed(1)} miles` : ''}.`;
+
+                            // Group results by rating for better organization
+                            const groupedResults = {
+                                excellent: enhancedResults.filter(r => r.basic_info.rating >= 4.5),
+                                veryGood: enhancedResults.filter(r => r.basic_info.rating >= 4 && r.basic_info.rating < 4.5),
+                                good: enhancedResults.filter(r => r.basic_info.rating >= 3.5 && r.basic_info.rating < 4),
+                                other: enhancedResults.filter(r => r.basic_info.rating < 3.5),
+                            };
+
                             return {
-                                total: data.total,
+                                search_summary: searchSummary,
+                                total_results: data.total,
                                 region: data.region,
-                                businesses: enhancedResults,
+                                grouped_results: groupedResults,
+                                all_results: enhancedResults,
                             };
                         } catch (error) {
                             console.error('Restaurant finder error:', error);
