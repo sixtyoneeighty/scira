@@ -657,7 +657,7 @@ const YouTubeCard: React.FC<YouTubeCardProps> = ({ video, index }) => {
 const HomeContent = () => {
     const [query] = useQueryState('query', parseAsString.withDefault(''))
     const [q] = useQueryState('q', parseAsString.withDefault(''))
-    const [model] = useQueryState('model', parseAsString.withDefault('grok-2-1212'))
+    const [model] = useQueryState('model', parseAsString.withDefault('gemini-2.0-flash-exp'))
 
 
     const initialState = useMemo(() => ({
@@ -832,7 +832,7 @@ const HomeContent = () => {
                 "https://metwm7frkvew6tn1.public.blob.vercel-storage.com/mplx-changelogs/mplx-collab.jpeg",
             ],
             content: `
-## **Mojo x Vercel x xAI Collab**
+## **Mojo x Vercel x Collab**
 
 Excited to annouce that Mojo and sixtyoneeighty have partnered with Vercel to bring you the best of AI search experience.
 

@@ -1,7 +1,7 @@
 // /app/api/chat/route.ts
 import { getGroupConfig } from '@/app/actions';
 import { serverEnv } from '@/env/server';
-import { Gemini } from '@vercel/ai/providers';
+import { google } from '@ai-sdk/google';
 import CodeInterpreter from '@e2b/code-interpreter';
 import FirecrawlApp from '@mendable/firecrawl-js';
 import { tavily } from '@tavily/core';
@@ -318,7 +318,7 @@ export async function POST(req: Request) {
                                       data.images.map(async ({ url }: { url: string }) => {
                                           const sanitizedUrl = sanitizeUrl(url);
                                           return (await isValidImageUrl(sanitizedUrl)) ? sanitizedUrl : null;
-                                      }),
+                                      })
                         };
                     });
 
