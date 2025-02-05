@@ -1,3 +1,4 @@
-FROM e2bdev/code-interpreter:latest
+# You can use most Debian-based base images
+FROM ubuntu:22.04
 
-RUN pip install yfinance
+# Install dependencies and customize sandbox

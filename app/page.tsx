@@ -374,25 +374,6 @@ const TooltipButton = ({ href, tooltip, children }: {
     );
 };
 
-const XAIIcon = ({ size = 16 }: { size: number }) => {
-    return (
-        <svg
-            height={size}
-            strokeLinejoin="round"
-            viewBox="0 0 24 24"
-            width={size}
-            style={{ color: "currentcolor" }}
-        >
-            <path
-                d="m3.005 8.858 8.783 12.544h3.904L6.908 8.858zM6.905 15.825 3 21.402h3.907l1.951-2.788zM16.585 2l-6.75 9.64 1.953 2.79L20.492 2zM17.292 7.965v13.437h3.2V3.395z"
-                fillRule='evenodd'
-                clipRule={'evenodd'}
-                fill={'currentColor'}
-            ></path>
-        </svg>
-    );
-}
-
 const IconMapping: Record<string, LucideIcon> = {
     stock: TrendingUp,
     default: Code,
@@ -851,10 +832,10 @@ const HomeContent = () => {
                 "https://metwm7frkvew6tn1.public.blob.vercel-storage.com/mplx-changelogs/mplx-collab.jpeg",
             ],
             content: `
-## **Scira x Vercel x xAI Collab**
+## **Mojo x Vercel x xAI Collab**
 
-Excited to annouce that Scira has partnered with Vercel and xAI to bring you the best of AI search experience.
-Grok 2 models are now available for you to try out.
+Excited to annouce that Mojo and sixtyoneeighty have partnered with Vercel to bring you the best of AI search experience.
+
 `
         }
     ];
@@ -1207,9 +1188,9 @@ Grok 2 models are now available for you to try out.
         return (
             <div className="prose prose-neutral dark:prose-invert max-w-none space-y-8 p-1">
                 <section className="space-y-4 font-syne">
-                    <h2 className="text-2xl font-medium mt-2">Welcome to Scira</h2>
+                    <h2 className="text-2xl font-medium mt-2">Welcome to Mojo</h2>
                     <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                        Scira (Formerly MiniPerplx) is an minimalistic AI-powered search engine that combines multiple data sources to provide comprehensive answers. The name &lsquo;Scira&rsquo; is derived from the Latin word &lsquo;scire&rsquo;, meaning &lsquo;to know&rsquo; - reflecting our mission to make knowledge accessible and intuitive.
+                        Mojo (Formerly MiniPerplx) is an minimalistic AI-powered search engine that combines multiple data sources to provide comprehensive answers. The name &lsquo;Mojo&rsquo; is derived from the Latin word &lsquo;scire&rsquo;, meaning &lsquo;to know&rsquo; - reflecting our mission to make knowledge accessible and intuitive.
                     </p>
                     <div className="flex flex-row items-center gap-2 h-8">
                         <Link
@@ -1234,7 +1215,7 @@ Grok 2 models are now available for you to try out.
                         >
                             <img
                                 src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=776449&theme=light&t=1736847508935"
-                                alt="Scira - A minimalistic open-source AI-powered search engine | Product Hunt"
+                                alt="Mojo - A minimalistic open-source AI-powered search engine | Product Hunt"
                                 className="h-8"
                             />
                         </a>
@@ -1959,117 +1940,6 @@ const ToolInvocationListView = memo(
                     return <TrendingResults result={result} type="tv" />;
                 }
 
-
-                if (toolInvocation.toolName === 'x_search') {
-                    if (!result) {
-                        return <SearchLoadingState
-                            icon={XLogo}
-                            text="Searching for latest news..."
-                            color="gray"
-                        />;
-                    }
-
-                    const PREVIEW_COUNT = 3;
-
-                    const FullTweetList = memo(() => (
-                        <div className="grid gap-4 p-4 sm:max-w-[500px]">
-                            {result.map((post: XResult, index: number) => (
-                                <motion.div
-                                    key={post.id}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ duration: 0.3, delay: index * 0.1 }}
-                                    className='[&>div]:m-0'
-                                >
-                                    <Tweet id={post.tweetId} />
-                                </motion.div>
-                            ))}
-                        </div>
-                    ));
-
-                    FullTweetList.displayName = 'FullTweetList';
-
-                    return (
-                        <Card className="w-full my-4 overflow-hidden shadow-none">
-                            <CardHeader className="pb-2 flex flex-row items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                    <div className="h-8 w-8 rounded-full bg-neutral-100 dark:bg-neutral-900 flex items-center justify-center">
-                                        <XLogo className="h-4 w-4" />
-                                    </div>
-                                    <div>
-                                        <CardTitle>Latest from X</CardTitle>
-                                        <p className="text-sm text-neutral-500 dark:text-neutral-400">
-                                            {result.length} tweets found
-                                        </p>
-                                    </div>
-                                </div>
-                            </CardHeader>
-                            <div className="relative">
-                                <div className="px-4 pb-2 h-72">
-                                    <div className="flex flex-nowrap overflow-x-auto gap-4 no-scrollbar">
-                                        {result.slice(0, PREVIEW_COUNT).map((post: XResult, index: number) => (
-                                            <motion.div
-                                                key={post.tweetId}
-                                                className="w-[min(100vw-2rem,320px)] flex-none"
-                                                initial={{ opacity: 0, y: 20 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                transition={{ duration: 0.3, delay: index * 0.1 }}
-                                            >
-                                                <Tweet id={post.tweetId} />
-                                            </motion.div>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-white dark:to-black pointer-events-none" />
-
-                                <div className="absolute bottom-0 inset-x-0 flex items-center justify-center pb-4 pt-20 bg-gradient-to-t from-white dark:from-black to-transparent">
-                                    <div className="hidden sm:block">
-                                        <Sheet>
-                                            <SheetTrigger asChild>
-                                                <Button
-                                                    variant="outline"
-                                                    className="gap-2 bg-white dark:bg-black"
-                                                >
-                                                    <XLogo className="h-4 w-4" />
-                                                    Show all {result.length} tweets
-                                                </Button>
-                                            </SheetTrigger>
-                                            <SheetContent side="right" className="w-[400px] sm:w-[600px] overflow-y-auto !p-0 !z-[70]">
-                                                <SheetHeader className='!mt-5 !font-sans'>
-                                                    <SheetTitle className='text-center'>All Tweets</SheetTitle>
-                                                </SheetHeader>
-                                                <FullTweetList />
-                                            </SheetContent>
-                                        </Sheet>
-                                    </div>
-
-                                    <div className="block sm:hidden">
-                                        <Drawer>
-                                            <DrawerTrigger asChild>
-                                                <Button
-                                                    variant="outline"
-                                                    className="gap-2 bg-white dark:bg-black"
-                                                >
-                                                    <XLogo className="h-4 w-4" />
-                                                    Show all {result.length} tweets
-                                                </Button>
-                                            </DrawerTrigger>
-                                            <DrawerContent className="max-h-[85vh] font-sans">
-                                                <DrawerHeader>
-                                                    <DrawerTitle>All Tweets</DrawerTitle>
-                                                </DrawerHeader>
-                                                <div className="overflow-y-auto">
-                                                    <FullTweetList />
-                                                </div>
-                                            </DrawerContent>
-                                        </Drawer>
-                                    </div>
-                                </div>
-                            </div>
-                        </Card>
-                    );
-                }
 
                 if (toolInvocation.toolName === 'youtube_search') {
                     if (!result) {

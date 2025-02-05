@@ -4,9 +4,9 @@ import { z } from 'zod'
 
 export const serverEnv = createEnv({
   server: {
-    XAI_API_KEY: z.string().min(1),
-    UPSTASH_REDIS_REST_URL: z.string().min(1).url(),
-    UPSTASH_REDIS_REST_TOKEN: z.string().min(1),
+    GEMINI_API_KEY: z.string().min(1),
+    KV_REST_REST_URL: z.string().min(1).url(),
+    KV_REST_REST_TOKEN: z.string().min(1),
     ELEVENLABS_API_KEY: z.string().min(1),
     TAVILY_API_KEY: z.string().min(1),
     EXA_API_KEY: z.string().min(1),

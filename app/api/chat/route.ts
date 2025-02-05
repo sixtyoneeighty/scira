@@ -1,7 +1,7 @@
 // /app/api/chat/route.ts
 import { getGroupConfig } from '@/app/actions';
 import { serverEnv } from '@/env/server';
-import { xai } from '@ai-sdk/xai';
+import { Gemini } from '@vercel/ai/providers';
 import CodeInterpreter from '@e2b/code-interpreter';
 import FirecrawlApp from '@mendable/firecrawl-js';
 import { tavily } from '@tavily/core';
@@ -11,17 +11,6 @@ import { z } from 'zod';
 
 // Allow streaming responses up to 60 seconds
 export const maxDuration = 120;
-
-interface XResult {
-    id: string;
-    url: string;
-    title: string;
-    author?: string;
-    publishedDate?: string;
-    text: string;
-    highlights?: string[];
-    tweetId: string;
-}
 
 interface MapboxFeature {
     id: string;
@@ -109,11 +98,16 @@ async function isValidImageUrl(url: string): Promise<boolean> {
 }
 
 export async function POST(req: Request) {
-    const { messages, model, group } = await req.json();
+    const { messages, group } = await req.json();
     const { tools: activeTools, systemPrompt } = await getGroupConfig(group);
 
+    const gemini = new Gemini({
+        apiKey: serverEnv.GEMINI_API_KEY!,
+        model: 'gemini-2.0-flash-exp'
+    });
+
     const result = streamText({
-        model: xai(model),
+        model: gemini,
         messages: convertToCoreMessages(messages),
         experimental_transform: smoothStream({
             chunking: 'word',
@@ -325,7 +319,6 @@ export async function POST(req: Request) {
                                           const sanitizedUrl = sanitizeUrl(url);
                                           return (await isValidImageUrl(sanitizedUrl)) ? sanitizedUrl : null;
                                       }),
-                                  ).then((results) => results.filter((url): url is string => url !== null)),
                         };
                     });
 
@@ -334,64 +327,6 @@ export async function POST(req: Request) {
                     return {
                         searches: searchResults,
                     };
-                },
-            }),
-            x_search: tool({
-                description: 'Search X (formerly Twitter) posts.',
-                parameters: z.object({
-                    query: z.string().describe('The search query'),
-                    startDate: z.string().optional().describe('The start date for the search in YYYY-MM-DD format'),
-                    endDate: z.string().optional().describe('The end date for the search in YYYY-MM-DD format'),
-                }),
-                execute: async ({
-                    query,
-                    startDate,
-                    endDate,
-                }: {
-                    query: string;
-                    startDate?: string;
-                    endDate?: string;
-                }) => {
-                    try {
-                        const exa = new Exa(serverEnv.EXA_API_KEY as string);
-
-                        const start = startDate
-                            ? new Date(startDate).toISOString()
-                            : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-                        const end = endDate ? new Date(endDate).toISOString() : new Date().toISOString();
-
-                        const result = await exa.searchAndContents(query, {
-                            type: 'keyword',
-                            numResults: 10,
-                            text: true,
-                            highlights: true,
-                            includeDomains: ['twitter.com', 'x.com'],
-                        });
-
-                        // Extract tweet ID from URL
-                        const extractTweetId = (url: string): string | null => {
-                            const match = url.match(/(?:twitter\.com|x\.com)\/\w+\/status\/(\d+)/);
-                            return match ? match[1] : null;
-                        };
-
-                        // Process and filter results
-                        const processedResults = result.results.reduce<Array<XResult>>((acc, post) => {
-                            const tweetId = extractTweetId(post.url);
-                            if (tweetId) {
-                                acc.push({
-                                    ...post,
-                                    tweetId,
-                                    title: post.title || '',
-                                });
-                            }
-                            return acc;
-                        }, []);
-
-                        return processedResults;
-                    } catch (error) {
-                        console.error('X search error:', error);
-                        throw error;
-                    }
                 },
             }),
             tmdb_search: tool({

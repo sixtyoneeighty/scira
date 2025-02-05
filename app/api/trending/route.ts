@@ -87,7 +87,7 @@ async function fetchRedditQuestions(): Promise<TrendingQuery[]> {
     try {
         const response = await fetch('https://www.reddit.com/r/askreddit/hot.json?limit=100', {
             headers: {
-                'User-Agent': 'Scira/1.0',
+                'User-Agent': 'Mojo/1.0',
             },
         });
 
