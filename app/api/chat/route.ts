@@ -1254,32 +1254,81 @@ export async function POST(req: Request) {
     } catch (error) {
         console.error('Chat route error:', error);
         
-        // Determine the appropriate status code
+        // Enhanced error handling with specific error types
         let statusCode = 500;
+        let errorMessage = 'An unexpected error occurred';
+        let errorCode = 'INTERNAL_SERVER_ERROR';
+
         if (error instanceof Error) {
+            // Parse validation errors
             if (error.message.includes('parse') || error.message.includes('Invalid')) {
                 statusCode = 400;
-            } else if (error.message.includes('not configured')) {
+                errorCode = 'VALIDATION_ERROR';
+                errorMessage = error.message;
+            } 
+            // Configuration errors
+            else if (error.message.includes('not configured')) {
                 statusCode = 503;
+                errorCode = 'SERVICE_UNAVAILABLE';
+                errorMessage = 'Service is temporarily unavailable';
+            }
+            // API rate limits
+            else if (error.message.includes('rate limit') || error.message.includes('429')) {
+                statusCode = 429;
+                errorCode = 'RATE_LIMIT_EXCEEDED';
+                errorMessage = 'Rate limit exceeded. Please try again later';
+            }
+            // Authentication errors
+            else if (error.message.includes('unauthorized') || error.message.includes('authentication')) {
+                statusCode = 401;
+                errorCode = 'UNAUTHORIZED';
+                errorMessage = 'Authentication failed';
+            }
+            // Model errors
+            else if (error.message.includes('model')) {
+                statusCode = 400;
+                errorCode = 'MODEL_ERROR';
+                errorMessage = error.message;
+            }
+            // Stream errors
+            else if (error.message.includes('stream')) {
+                statusCode = 500;
+                errorCode = 'STREAM_ERROR';
+                errorMessage = 'Failed to create response stream';
+            }
+            // Default error handling
+            else {
+                errorMessage = error.message;
             }
         }
 
-        // Create a user-friendly error response
+        // Create a detailed error response
         const errorResponse = {
-            error: error instanceof Error ? error.message : 'An unexpected error occurred',
-            code: statusCode,
+            error: errorMessage,
+            code: errorCode,
+            status: statusCode,
             timestamp: new Date().toISOString(),
+            request_id: crypto.randomUUID(),
             details: process.env.NODE_ENV === 'development' ? {
                 stack: error instanceof Error ? error.stack : undefined,
                 cause: error instanceof Error ? error.cause : undefined,
+                name: error instanceof Error ? error.name : undefined,
             } : undefined,
         };
+
+        // Log the error details for debugging
+        console.error('Error details:', {
+            ...errorResponse,
+            stack: error instanceof Error ? error.stack : undefined,
+        });
 
         return new Response(JSON.stringify(errorResponse), {
             status: statusCode,
             headers: {
                 'Content-Type': 'application/json',
                 'Cache-Control': 'no-store, must-revalidate',
+                'X-Error-Code': errorCode,
+                'X-Request-ID': errorResponse.request_id,
             },
         });
     }

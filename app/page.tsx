@@ -745,65 +745,19 @@ const HomeContent = () => {
                 setSuggestedQuestions(questions);
             }
         },
-        onError: (error: ChatError, context?: ChatErrorContext) => {
-            // Create a detailed error log group
-            console.group('Chat Error Details');
-            
-            // Log the complete error object and context
-            console.error('Error Object:', {
-                error,
-                name: error?.name,
-                message: error?.message,
-                stack: error?.stack,
-                cause: error?.cause
+        onError: (error: Error) => {
+            // Simplified error logging
+            console.group('Chat Error');
+            console.error('Basic Error Details:', {
+                name: error.name,
+                message: error.message,
+                stack: error.stack
             });
-
-            // Log the error context
-            console.error('Error Context:', {
-                context,
-                timestamp: new Date().toISOString(),
-                model: selectedModel,
-                group: selectedGroup,
-                lastQuery: lastSubmittedQueryRef.current,
-                messagesCount: messages.length
-            });
-
-            // If there's a response object, log it
-            if (error.response) {
-                console.error('Response Details:', {
-                    status: error.response.status,
-                    statusText: error.response.statusText,
-                    data: error.response.data,
-                    headers: error.response.headers
-                });
-            }
-
-            // If there's a request object, log it
-            if (error.request) {
-                console.error('Request Details:', {
-                    method: error.request.method,
-                    url: error.request.url,
-                    headers: error.request.headers
-                });
-            }
-
-            // Check for network errors
-            if (error.isAxiosError) {
-                console.error('Network Error:', {
-                    isAxiosError: true,
-                    config: error.config,
-                    code: error.code
-                });
-            }
-
             console.groupEnd();
 
-            // Show a user-friendly error message with as much detail as appropriate
-            const errorMessage = error.message || (error.cause as Error)?.message || context?.message || 'No further details available.';
-            const statusCode = error.response?.status ? ` (Status: ${error.response.status})` : '';
-            
+            // Simple user-friendly error message
             toast.error("An error occurred", {
-                description: `Oops! ${errorMessage}${statusCode}`,
+                description: error.message || 'Something went wrong. Please try again.',
                 duration: 5000,
             });
         },
