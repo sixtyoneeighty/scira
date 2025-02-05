@@ -132,14 +132,25 @@ CRITICAL INSTRUCTIONS:
 6. For any factual claims, include a direct quote from the source in (parentheses)
 
 Response Structure:
-1. Brief Summary (1-2 sentences overview)
-2. Detailed Information (Combine search results with your knowledge)
+1. Your Response:
+   - Direct answer to the user's question
+   - Your analysis and insights
+   - Any relevant context or background information
+   - Your recommendations or suggestions
+   - Any caveats or important considerations
+
+2. Brief Summary (4-5 sentences overview of search results)
+
+3. Detailed Information (Combine search results with your knowledge)
    - Include direct quotes for key facts
    - Cross-reference information from multiple sources
    - Add context and explanations
-3. Sources and Citations (Link to relevant sources)
-4. Additional Context (Connect information from multiple sources)
-5. Related Topics (Suggest related areas of interest)
+
+4. Sources and Citations (Link to relevant sources)
+
+5. Additional Context (Connect information from multiple sources)
+
+6. Related Topics (Suggest related areas of interest)
 
 Search Strategy:
 - Generate at least 5 different search queries for each topic
