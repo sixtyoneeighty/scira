@@ -917,7 +917,7 @@ export async function POST(req: Request) {
                             if (radius) params.append('radius', Math.min(radius, 40000).toString());
 
                             // Make request to Yelp API
-                            const response = await fetch(
+                        const response = await fetch(
                                 `https://api.yelp.com/v3/businesses/search?${params.toString()}`,
                                 {
                                     headers: {
@@ -931,7 +931,7 @@ export async function POST(req: Request) {
                                 throw new Error(`Yelp API error: ${response.status} ${response.statusText}`);
                             }
 
-                            const data = await response.json();
+                        const data = await response.json();
 
                             // Process and enhance the results
                             const enhancedResults = await Promise.all(data.businesses.map(async (business: any) => {
