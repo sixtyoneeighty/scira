@@ -724,9 +724,17 @@ const HomeContent = () => {
             }
         },
         onError: (error) => {
-            console.error("Chat error:", error.cause, error.message);
-            toast.error("An error occurred.", {
-                description: `Oops! An error occurred while processing your request. ${error.message}`,
+            console.error("Chat error details:", {
+                error,
+                name: error.name,
+                message: error.message,
+                cause: error.cause,
+                stack: error.stack
+            });
+            
+            toast.error("An error occurred", {
+                description: `Oops! An error occurred while processing your request. ${error.message || error.cause || 'No further information available.'}`,
+                duration: 5000,
             });
         },
     });

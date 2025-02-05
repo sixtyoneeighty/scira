@@ -93,6 +93,14 @@ const nextConfig = {
             },
         ]
     },
+    productionBrowserSourceMaps: true,
+    webpack: (config, { dev, isServer }) => {
+        // Enable better error logging in production
+        if (!dev && !isServer) {
+            config.devtool = 'source-map'
+        }
+        return config
+    }
 };
 
 export default nextConfig;
