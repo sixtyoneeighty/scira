@@ -746,21 +746,85 @@ const HomeContent = () => {
             }
         },
         onError: (error: Error) => {
-            // Simplified error logging
-            console.group('Chat Error');
-            console.error('Basic Error Details:', {
+            // Enhanced error logging with context
+            console.group('Chat Error Details');
+            
+            // Log basic error info
+            console.error('Error Info:', {
                 name: error.name,
                 message: error.message,
-                stack: error.stack
+                stack: error.stack,
             });
+
+            // Log current state
+            console.error('Current State:', {
+                model: selectedModel,
+                group: selectedGroup,
+                messageCount: messages.length,
+                lastQuery: lastSubmittedQueryRef.current,
+                timestamp: new Date().toISOString()
+            });
+
+            // Check for specific error types
+            if (error instanceof TypeError) {
+                console.error('Type Error - likely a streaming or parsing issue');
+            }
+            
+            if ('cause' in error) {
+                console.error('Error Cause:', error.cause);
+            }
+
+            // If it's a response error, log response details
+            if ('response' in error) {
+                const responseError = error as any;
+                console.error('Response Error:', {
+                    status: responseError.response?.status,
+                    statusText: responseError.response?.statusText,
+                    data: responseError.response?.data,
+                });
+            }
+
+            // If it's a network error, log request details
+            if ('request' in error) {
+                const networkError = error as any;
+                console.error('Network Error:', {
+                    method: networkError.request?.method,
+                    url: networkError.request?.url,
+                });
+            }
+
             console.groupEnd();
 
-            // Simple user-friendly error message
-            toast.error("An error occurred", {
-                description: error.message || 'Something went wrong. Please try again.',
+            // Show user-friendly error message based on error type
+            let errorMessage = 'Something went wrong. Please try again.';
+            let errorDescription = '';
+
+            if (error.message.includes('stream')) {
+                errorMessage = 'Connection error';
+                errorDescription = 'There was a problem with the streaming connection. Please try again.';
+            } else if (error.message.includes('model')) {
+                errorMessage = 'Model error';
+                errorDescription = 'The selected model is currently unavailable. Please try a different model.';
+            } else if (error.message.includes('rate limit')) {
+                errorMessage = 'Rate limit exceeded';
+                errorDescription = 'Please wait a moment before trying again.';
+            } else if (error.message.includes('validation')) {
+                errorMessage = 'Invalid input';
+                errorDescription = 'Please check your input and try again.';
+            } else {
+                errorDescription = error.message || 'An unexpected error occurred.';
+            }
+
+            toast.error(errorMessage, {
+                description: errorDescription,
                 duration: 5000,
             });
-        },
+
+            // If it's a critical error, stop the stream
+            if (error.message.includes('stream') || error.message.includes('connection')) {
+                stop();
+            }
+        }
     });
 
     useEffect(() => {
