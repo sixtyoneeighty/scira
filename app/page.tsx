@@ -658,7 +658,7 @@ const YouTubeCard: React.FC<YouTubeCardProps> = ({ video, index }) => {
 const HomeContent = () => {
     const [query] = useQueryState('query', parseAsString.withDefault(''))
     const [q] = useQueryState('q', parseAsString.withDefault(''))
-    const [model] = useQueryState('model', parseAsString.withDefault('gemini-2.0-flash-thinking-exp'))
+    const [model] = useQueryState('model', parseAsString.withDefault('gemini-2.0-flash-exp'))
 
 
     const initialState = useMemo(() => ({
