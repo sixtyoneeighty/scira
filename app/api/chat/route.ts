@@ -324,6 +324,7 @@ export async function POST(req: Request) {
                                           const sanitizedUrl = sanitizeUrl(url);
                                           return (await isValidImageUrl(sanitizedUrl)) ? sanitizedUrl : null;
                                       })
+                                  )
                         };
                     });
 

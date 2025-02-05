@@ -10,8 +10,8 @@
     "knip": "knip"
   },
   "dependencies": {
-    "@ai-sdk/google": "1.0.4",
-    "@ai-sdk/provider": "1.0.4",
+    "@ai-sdk/google": "1.0.7",
+    "@ai-sdk/provider": "1.0.7",
     "@e2b/code-interpreter": "^1.0.3",
     "@foobar404/wave": "^2.0.5",
     "@google/generative-ai": "^0.21.0",
