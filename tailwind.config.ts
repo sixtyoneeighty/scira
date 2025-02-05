@@ -83,10 +83,64 @@ const config = {
           "0%": { backgroundPosition: "0% 50%" },
           "100%": { backgroundPosition: "100% 50%" },
         },
+        "fade-in": {
+          "0%": { opacity: "0" },
+          "100%": { opacity: "1" },
+        },
+        "fade-out": {
+          "0%": { opacity: "1" },
+          "100%": { opacity: "0" },
+        },
+        "slide-up": {
+          "0%": { transform: "translateY(10px)", opacity: "0" },
+          "100%": { transform: "translateY(0)", opacity: "1" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "fade-in": "fade-in 0.3s ease-out",
+        "fade-out": "fade-out 0.3s ease-out",
+        "slide-up": "slide-up 0.3s ease-out",
+      },
+      boxShadow: {
+        'subtle': 'var(--shadow-sm)',
+        'elevation': 'var(--shadow-md)',
+        'float': 'var(--shadow-lg)',
+      },
+      typography: {
+        DEFAULT: {
+          css: {
+            maxWidth: '65ch',
+            color: 'hsl(var(--foreground))',
+            a: {
+              color: 'hsl(var(--primary))',
+              '&:hover': {
+                color: 'hsl(var(--primary))',
+              },
+            },
+            strong: {
+              color: 'hsl(var(--foreground))',
+            },
+            'h1, h2, h3, h4': {
+              color: 'hsl(var(--foreground))',
+              'scroll-margin-top': '100px',
+            },
+            code: {
+              color: 'hsl(var(--primary))',
+            },
+            'code::before': {
+              content: '""',
+            },
+            'code::after': {
+              content: '""',
+            },
+            pre: {
+              backgroundColor: 'hsl(var(--muted))',
+              color: 'hsl(var(--muted-foreground))',
+            },
+          },
+        },
       },
     },
   },
