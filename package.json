@@ -71,7 +71,6 @@
     "next-themes": "^0.3.0",
     "nuqs": "^2.3.0",
     "openai": "^4.56.0",
-    "posthog-js": "^1.202.2",
     "react": "^18",
     "react-dom": "^18",
     "react-latex-next": "^3.0.0",
