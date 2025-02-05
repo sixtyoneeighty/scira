@@ -42,7 +42,7 @@ export function WelcomePopup() {
             </p>
             
             <p className="text-sm text-gray-500 mb-4">
-              We'd greatly appreciate your feedback! If you encounter any issues or unusual behavior, 
+              We&apos;d greatly appreciate your feedback! If you encounter any issues or unusual behavior, 
               please email us at{' '}
               <a 
                 href="mailto:support@sixtyoneeightyai.com" 
