@@ -4,7 +4,7 @@ import { z } from 'zod'
 
 export const serverEnv = createEnv({
   server: {
-    GEMINI_API_KEY: z.string().min(1),
+    GOOGLE_GENERATIVE_AI_API_KEY: z.string().min(1),
     KV_REST_REST_URL: z.string().min(1).url(),
     KV_REST_REST_TOKEN: z.string().min(1),
     ELEVENLABS_API_KEY: z.string().min(1),

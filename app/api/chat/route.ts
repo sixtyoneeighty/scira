@@ -149,8 +149,8 @@ export async function POST(req: Request) {
             throw new Error('Failed to load configuration');
         });
 
-        if (!serverEnv.GEMINI_API_KEY) {
-            throw new Error('GEMINI_API_KEY is not configured');
+        if (!serverEnv.GOOGLE_GENERATIVE_AI_API_KEY) {
+            throw new Error('GOOGLE_GENERATIVE_AI_API_KEY is not configured');
         }
 
         const model = google('gemini-2.0-flash-exp', {
