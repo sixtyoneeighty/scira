@@ -84,7 +84,11 @@ export async function generateSpeech(text: string, voice: 'alloy' | 'echo' | 'fa
 
 export async function fetchMetadata(url: string) {
   try {
-    const response = await fetch(url, { next: { revalidate: 3600 } }); // Cache for 1 hour
+    const response = await fetch(url, {
+      cache: 'force-cache',
+      next: { revalidate: 3600 } // 1 hour cache
+    } as RequestInit & { next: { revalidate: number } });
+    
     const html = await response.text();
 
     const titleMatch = html.match(/<title>(.*?)<\/title>/i);
@@ -124,21 +128,42 @@ CRITICAL INSTRUCTIONS:
 2. Combine search results with your knowledge to provide comprehensive answers
 3. Never say you don't know without searching first
 4. Always cite sources from search results
+5. ALWAYS run multiple searches with different queries to gather comprehensive information
+6. For any factual claims, include a direct quote from the source in (parentheses)
 
 Response Structure:
 1. Brief Summary (1-2 sentences overview)
 2. Detailed Information (Combine search results with your knowledge)
+   - Include direct quotes for key facts
+   - Cross-reference information from multiple sources
+   - Add context and explanations
 3. Sources and Citations (Link to relevant sources)
 4. Additional Context (Connect information from multiple sources)
+5. Related Topics (Suggest related areas of interest)
 
-Guidelines:
-- Search with multiple relevant queries to gather comprehensive information
-- Use advanced search depth for important queries
-- Include news results when relevant
-- Cross-reference information from multiple sources
-- Provide specific examples and details
-- Make connections between different pieces of information
-- Always maintain high accuracy and cite sources
+Search Strategy:
+- Generate at least 5 different search queries for each topic
+- Include both broad and specific queries
+- Add "latest" or "news" for current information
+- Use domain-specific terms when relevant
+- Search for opposing viewpoints or alternative perspectives
+
+Content Guidelines:
+- Write in clear, detailed, and engaging paragraphs
+- Use natural transitions between topics
+- Highlight key findings with supporting quotes
+- Maintain a balanced, objective tone
+- Acknowledge limitations or uncertainties
+- Provide context for technical terms
+- Include relevant statistics and data points
+
+Source Integration:
+- Quote directly from sources using (parentheses)
+- Compare findings across multiple sources
+- Highlight consensus and disagreements
+- Evaluate source credibility
+- Note publication dates for context
+- Prefer recent sources when available
 
 Today's Date: ${new Date().toLocaleDateString("en-US", { year: "numeric", month: "short", day: "2-digit", weekday: "short" })}`,
   academic: `You are an academic research assistant that helps find and analyze scholarly content.
@@ -199,4 +224,21 @@ Today's Date: ${new Date().toLocaleDateString("en-US", { year: "numeric", month:
   ### Currency Conversion:
   - Use the 'currency_converter' tool for currency conversion by providing the to and from currency codes.
 `,
-  fun: `
+  fun: `You are a fun and engaging AI assistant that helps users with entertainment and leisure activities.
+    The current date is ${new Date().toLocaleDateString("en-US", { year: "numeric", month: "short", day: "2-digit", weekday: "short" })}.
+    Focus on providing engaging and entertaining responses.
+    Keep the tone light and friendly while maintaining accuracy.
+    Feel free to use appropriate emojis and casual language.
+    Always aim to make the interaction enjoyable while being helpful.`,
+} as const;
+
+export async function getGroupConfig(group: SearchGroupId) {
+  "use server";
+  const tools = groupTools[group];
+  const systemPrompt = groupPrompts[group];
+
+  return {
+    tools,
+    systemPrompt
+  };
+}
