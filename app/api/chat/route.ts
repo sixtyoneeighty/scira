@@ -333,15 +333,15 @@ export async function POST(req: Request) {
                 web_search: tool({
                     description: 'Search the web for information with multiple queries, max results and search depth.',
                     parameters: z.object({
-                        queries: z.array(z.string().describe('Array of search queries to look up on the web.')),
+                        queries: z.array(z.string().describe('Array of search queries to look up on the web. Generate multiple queries to cover different aspects of the user\'s question.')),
                         maxResults: z.array(
                             z.number().describe('Array of maximum number of results to return per query.').default(10),
                         ),
                         topics: z.array(
-                            z.enum(['general', 'news']).describe('Array of topic types to search for.').default('general'),
+                            z.enum(['general', 'news']).describe('Array of topic types to search for. Include "news" for recent information.').default('general'),
                         ),
                         searchDepth: z.array(
-                            z.enum(['basic', 'advanced']).describe('Array of search depths to use.').default('basic'),
+                            z.enum(['basic', 'advanced']).describe('Array of search depths to use. Prefer "advanced" for complex queries.').default('advanced'),
                         ),
                         exclude_domains: z
                             .array(z.string())
@@ -383,68 +383,36 @@ export async function POST(req: Request) {
                                         topic: topics[index] || topics[0] || 'general',
                                         days: topics[index] === 'news' ? 7 : undefined,
                                         maxResults: maxResults[index] || maxResults[0] || 10,
-                                        searchDepth: searchDepth[index] || searchDepth[0] || 'basic',
+                                        searchDepth: searchDepth[index] || searchDepth[0] || 'advanced',
                                         includeAnswer: true,
                                         includeImages: true,
                                         includeImageDescriptions: includeImageDescriptions,
                                         excludeDomains: exclude_domains,
                                     });
 
-                                    // Process images with error handling
-                                    const processedImages = includeImageDescriptions
-                                        ? await Promise.all(
-                                              data.images.map(async ({ url, description }: { url: string; description?: string }) => {
-                                                  try {
-                                                      const sanitizedUrl = sanitizeUrl(url);
-                                                      const isValid = await isValidImageUrl(sanitizedUrl);
-
-                                                      return isValid
-                                                          ? {
-                                                                url: sanitizedUrl,
-                                                                description: description ?? '',
-                                                            }
-                                                          : null;
-                                                  } catch (error) {
-                                                      console.error(`Error processing image ${url}:`, error);
-                                                      return null;
-                                                  }
-                                              }),
-                                          ).then((results) =>
-                                              results.filter(
-                                                  (
-                                                      image,
-                                                  ): image is {
-                                                      url: string;
-                                                      description: string;
-                                                  } =>
-                                                      image !== null &&
-                                                      typeof image === 'object' &&
-                                                      typeof image.description === 'string' &&
-                                                      image.description !== '',
-                                              ),
-                                          )
-                                        : await Promise.all(
-                                              data.images.map(async ({ url }: { url: string }) => {
-                                                  try {
-                                                      const sanitizedUrl = sanitizeUrl(url);
-                                                      return (await isValidImageUrl(sanitizedUrl)) ? sanitizedUrl : null;
-                                                  } catch (error) {
-                                                      console.error(`Error processing image ${url}:`, error);
-                                                      return null;
-                                                  }
-                                              }),
-                                          );
+                                    // Process and enhance the results
+                                    const enhancedResults = data.results.map((result: any) => ({
+                                        ...result,
+                                        summary: createMarkdownResponse({
+                                            summary: result.title,
+                                            details: {
+                                                content: result.content,
+                                                source: `[${result.domain}](${result.url})`,
+                                                date: result.published_date,
+                                            }
+                                        })
+                                    }));
 
                                     return {
                                         query,
-                                        results: data.results.map((obj: any) => ({
-                                            url: obj.url,
-                                            title: obj.title,
-                                            content: obj.content,
-                                            raw_content: obj.raw_content,
-                                            published_date: topics[index] === 'news' ? obj.published_date : undefined,
-                                        })),
-                                        images: processedImages.filter(Boolean),
+                                        results: enhancedResults,
+                                        answer: data.answer,
+                                        images: data.images
+                                            .filter((img: any) => img.url && img.description)
+                                            .map((img: any) => ({
+                                                url: sanitizeUrl(img.url),
+                                                description: img.description
+                                            })),
                                     };
                                 } catch (error) {
                                     console.error(`Error processing query "${query}":`, error);
@@ -465,16 +433,31 @@ export async function POST(req: Request) {
                                 throw new Error('All search queries failed to execute');
                             }
 
+                            // Create a comprehensive markdown summary
+                            const markdown = createMarkdownResponse({
+                                summary: 'Search Results Summary',
+                                details: {
+                                    'Queries Performed': queries,
+                                    'Key Findings': searchResults
+                                        .filter(result => !result.error)
+                                        .map(result => result.answer)
+                                        .filter(Boolean),
+                                    'Sources': searchResults
+                                        .flatMap(result => 
+                                            result.results.map((r: any) => 
+                                                `- [${r.title}](${r.url}) - ${r.content.substring(0, 150)}...`
+                                            )
+                                        )
+                                }
+                            });
+
                             return {
                                 searches: searchResults,
+                                markdown
                             };
                         } catch (error) {
                             console.error('Web search error:', error);
-                            throw new Error(
-                                error instanceof Error
-                                    ? `Web search failed: ${error.message}`
-                                    : 'Web search failed: An unknown error occurred',
-                            );
+                            throw error;
                         }
                     },
                 }),
