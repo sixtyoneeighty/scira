@@ -8,7 +8,7 @@ import { Button } from '../ui/button';
 import { Textarea } from '../ui/textarea';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "./hover-card"
 import useWindowSize from '@/hooks/use-window-size';
-import { X, Zap, ScanEye, ChevronDown } from 'lucide-react';
+import { X, Zap, ScanEye, ChevronDown, LucideIcon } from 'lucide-react';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -333,10 +333,10 @@ const ToolbarButton = ({ group, isSelected, onClick }: ToolbarButtonProps) => {
                 )}
             >
                 <div className="space-y-0.5">
-                    <h4 className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
+                    <h4 className="text-sm font-medium text-neutral-900 dark:text-neutral-100 font-dosis">
                         {group.name}
                     </h4>
-                    <p className="text-xs text-neutral-500 dark:text-neutral-400 leading-normal">
+                    <p className="text-xs text-neutral-500 dark:text-neutral-400 leading-normal font-lato">
                         {group.description}
                     </p>
                 </div>
@@ -424,7 +424,7 @@ interface SearchGroupConfig {
 }
 
 const GroupSelector = ({ selectedGroup, onGroupSelect }: { selectedGroup: SearchGroupId, onGroupSelect: (group: SearchGroupId) => void }) => {
-    const currentGroup = searchGroups[selectedGroup] as SearchGroupConfig;
+    const currentGroup = searchGroups.find(group => group.id === selectedGroup) as SearchGroupConfig;
     
     return (
         <DropdownMenu>
@@ -435,7 +435,8 @@ const GroupSelector = ({ selectedGroup, onGroupSelect }: { selectedGroup: Search
                     className={cn(
                         "h-8 gap-2 bg-white dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300",
                         "hover:bg-neutral-300 dark:hover:bg-neutral-600",
-                        "min-w-[120px] justify-between"
+                        "min-w-[120px] justify-between",
+                        "font-dosis"
                     )}
                 >
                     <div className="flex items-center gap-2 truncate">
@@ -450,10 +451,10 @@ const GroupSelector = ({ selectedGroup, onGroupSelect }: { selectedGroup: Search
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-[200px]">
-                {(Object.entries(searchGroups) as [SearchGroupId, SearchGroupConfig][]).map(([id, group]) => (
+                {searchGroups.map((group) => (
                     <DropdownMenuItem
-                        key={id}
-                        onClick={() => onGroupSelect(id)}
+                        key={group.id}
+                        onClick={() => onGroupSelect(group.id)}
                         className="flex items-center gap-2 cursor-pointer"
                     >
                         {group.icon && (
@@ -686,7 +687,8 @@ const FormComponent: React.FC<FormComponentProps> = ({
                         "focus:border-neutral-300 dark:focus:border-neutral-600",
                         "text-neutral-900 dark:text-neutral-100",
                         "focus:!ring-1 focus:!ring-neutral-300 dark:focus:!ring-neutral-600",
-                        "px-4 pt-3 pb-5"
+                        "px-4 pt-3 pb-5",
+                        "font-lato"
                     )}
                     rows={3}
                     autoFocus
@@ -713,7 +715,12 @@ const FormComponent: React.FC<FormComponentProps> = ({
                         {!hasSubmitted && (
                             <GroupSelector
                                 selectedGroup={selectedGroup}
-                                onGroupSelect={handleGroupSelect}
+                                onGroupSelect={(id: SearchGroupId) => {
+                                    const group = searchGroups.find(g => g.id === id);
+                                    if (group) {
+                                        handleGroupSelect(group);
+                                    }
+                                }}
                             />
                         )}
                     </div>

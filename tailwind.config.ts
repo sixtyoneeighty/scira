@@ -27,6 +27,8 @@ const config = {
         sans: ['var(--font-geist-sans)', ...fontFamily.sans],
         syne: ['var(--font-syne)'],
         mono: ['var(--font-geist-mono)', ...fontFamily.mono],
+        dosis: ['var(--font-dosis)'],
+        lato: ['var(--font-lato)'],
       },
       colors: {
         border: "hsl(var(--border))",

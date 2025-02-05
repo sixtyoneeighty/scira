@@ -2,6 +2,35 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import fonts */
+@import url('https://fonts.googleapis.com/css2?family=Dosis:wght@200;300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap');
+
+/* Proxima Nova needs to be added via @font-face since it's not freely available on Google Fonts */
+@font-face {
+    font-family: 'Proxima Nova';
+    src: url('/fonts/proxima-nova-regular.woff2') format('woff2');
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Proxima Nova';
+    src: url('/fonts/proxima-nova-medium.woff2') format('woff2');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Proxima Nova';
+    src: url('/fonts/proxima-nova-semibold.woff2') format('woff2');
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+
 .homeBtn {
   box-shadow: rgba(0, 0, 0, 0.4) 0px 2px 4px,
     rgba(0, 0, 0, 0.3) 0px 7px 13px -3px, rgba(0, 0, 0, 0.2) 0px -3px 0px inset,
@@ -102,6 +131,8 @@ h1 {
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
+    --font-dosis: 'Dosis', sans-serif;
+    --font-lato: 'Lato', system-ui, sans-serif;
   }
 
   .dark {
@@ -129,6 +160,15 @@ h1 {
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-dosis);
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-lato);
   }
 }
 
