@@ -104,6 +104,9 @@ importers:
       '@vercel/functions':
         specifier: ^1.4.0
         version: 1.4.2
+      '@vercel/kv':
+        specifier: 3.0.0
+        version: 3.0.0
       ai:
         specifier: ^4.1.0
         version: 4.1.0(react@18.3.1)(zod@3.24.1)
@@ -1285,6 +1288,10 @@ packages:
     peerDependenciesMeta:
       '@aws-sdk/credential-provider-web-identity':
         optional: true
+
+  '@vercel/kv@3.0.0':
+    resolution: {integrity: sha512-pKT8fRnfyYk2MgvyB6fn6ipJPCdfZwiKDdw7vB+HL50rjboEBHDVBEcnwfkEpVSp2AjNtoaOUH7zG+bVC/rvSg==}
+    engines: {node: '>=14.6'}
 
   abort-controller@3.0.0:
     resolution: {integrity: sha512-h8lQ8tacZYnR3vNQTgibj+tODHI5/+l06Au2Pcriv/Gmet0eaj4TwWH41sO9wnHDiQsEj19q0drzdWdeAHtweg==}
@@ -4834,6 +4841,10 @@ snapshots:
       undici: 5.28.4
 
   '@vercel/functions@1.4.2': {}
+
+  '@vercel/kv@3.0.0':
+    dependencies:
+      '@upstash/redis': 1.34.2
 
   abort-controller@3.0.0:
     dependencies:
