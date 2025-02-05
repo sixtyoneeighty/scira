@@ -763,18 +763,162 @@ export async function POST(req: Request) {
                     },
                 }),
                 get_weather_data: tool({
-                    description: 'Get the weather data for the given coordinates.',
+                    description: 'Get the weather data for a city.',
                     parameters: z.object({
-                        lat: z.number().describe('The latitude of the location.'),
-                        lon: z.number().describe('The longitude of the location.'),
+                        city: z.string().describe('The name of the city to get weather data for.'),
                     }),
-                    execute: async ({ lat, lon }: { lat: number; lon: number }) => {
+                    execute: async ({ city }: { city: string }) => {
                         const apiKey = serverEnv.OPENWEATHER_API_KEY;
-                        const response = await fetch(
-                            `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}`,
+                        
+                        // First, get coordinates from city name using geocoding API
+                        const geoResponse = await fetch(
+                            `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(city)}&limit=1&appid=${apiKey}`
                         );
-                        const data = await response.json();
-                        return data;
+                        const geoData = await geoResponse.json();
+                        
+                        if (!geoData || geoData.length === 0) {
+                            throw new Error('City not found');
+                        }
+                        
+                        const { lat, lon } = geoData[0];
+                        
+                        // Get weather data using coordinates
+                        const weatherResponse = await fetch(
+                            `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}&units=imperial`
+                        );
+                        const weatherData = await weatherResponse.json();
+                        
+                        return {
+                            ...weatherData,
+                            city_details: geoData[0]
+                        };
+                    },
+                }),
+                restaurant_finder: tool({
+                    description: 'Find restaurants and businesses using Yelp, with detailed filters and sorting options.',
+                    parameters: z.object({
+                        location: z.string().describe('Location to search in (city, address, or zip code)'),
+                        term: z.string().optional().describe('Search term (e.g., "sushi", "pizza", "coffee")'),
+                        price: z.string().optional().describe('Price level (1-4, can be combined like "1,2,3")'),
+                        categories: z.string().optional().describe('Category filter (e.g., "japanese,sushi")'),
+                        sort_by: z.enum(['best_match', 'rating', 'review_count', 'distance']).optional(),
+                        open_now: z.boolean().optional(),
+                        radius: z.number().optional().describe('Search radius in meters (max 40000)'),
+                        limit: z.number().min(1).max(50).default(20).describe('Number of results to return'),
+                    }),
+                    execute: async ({ 
+                        location, 
+                        term, 
+                        price, 
+                        categories,
+                        sort_by = 'best_match',
+                        open_now,
+                        radius,
+                        limit = 20
+                    }) => {
+                        try {
+                            if (!serverEnv.YELP_API_KEY) {
+                                throw new Error('YELP_API_KEY is not configured');
+                            }
+
+                            // Build query parameters
+                            const params = new URLSearchParams({
+                                location,
+                                limit: limit.toString(),
+                                sort_by: sort_by || 'best_match'
+                            });
+
+                            // Add optional parameters
+                            if (term) params.append('term', term);
+                            if (price) params.append('price', price);
+                            if (categories) params.append('categories', categories);
+                            if (open_now !== undefined) params.append('open_now', open_now.toString());
+                            if (radius) params.append('radius', Math.min(radius, 40000).toString());
+
+                            // Make request to Yelp API
+                            const response = await fetch(
+                                `https://api.yelp.com/v3/businesses/search?${params.toString()}`,
+                                {
+                                    headers: {
+                                        'Authorization': `Bearer ${serverEnv.YELP_API_KEY}`,
+                                        'Accept': 'application/json',
+                                    },
+                                }
+                            );
+
+                            if (!response.ok) {
+                                throw new Error(`Yelp API error: ${response.status} ${response.statusText}`);
+                            }
+
+                            const data = await response.json();
+
+                            // Process and enhance the results
+                            const enhancedResults = await Promise.all(data.businesses.map(async (business: any) => {
+                                try {
+                                    // Get additional business details
+                                    const detailsResponse = await fetch(
+                                        `https://api.yelp.com/v3/businesses/${business.id}`,
+                                        {
+                                            headers: {
+                                                'Authorization': `Bearer ${serverEnv.YELP_API_KEY}`,
+                                                'Accept': 'application/json',
+                                            },
+                                        }
+                                    );
+
+                                    const details = await detailsResponse.json();
+
+                                    // Get reviews
+                                    const reviewsResponse = await fetch(
+                                        `https://api.yelp.com/v3/businesses/${business.id}/reviews`,
+                                        {
+                                            headers: {
+                                                'Authorization': `Bearer ${serverEnv.YELP_API_KEY}`,
+                                                'Accept': 'application/json',
+                                            },
+                                        }
+                                    );
+
+                                    const reviews = await reviewsResponse.json();
+
+                                    // Combine all information
+                                    return {
+                                        id: business.id,
+                                        name: business.name,
+                                        url: business.url,
+                                        phone: business.phone,
+                                        rating: business.rating,
+                                        price: business.price,
+                                        review_count: business.review_count,
+                                        categories: business.categories,
+                                        coordinates: business.coordinates,
+                                        location: business.location,
+                                        photos: details.photos || [],
+                                        hours: details.hours || [],
+                                        special_hours: details.special_hours || [],
+                                        reviews: reviews.reviews || [],
+                                        is_claimed: details.is_claimed,
+                                        is_closed: business.is_closed,
+                                        distance: business.distance,
+                                        transactions: business.transactions,
+                                        messaging: details.messaging || {},
+                                        attributes: details.business_attributes || {},
+                                    };
+                                } catch (error) {
+                                    console.error(`Error fetching details for ${business.id}:`, error);
+                                    return business; // Return basic information if details fetch fails
+                                }
+                            }));
+
+                            return {
+                                total: data.total,
+                                region: data.region,
+                                businesses: enhancedResults,
+                            };
+                        } catch (error) {
+                            console.error('Restaurant finder error:', error);
+                            throw error;
+                        }
                     },
                 }),
                 code_interpreter: tool({
