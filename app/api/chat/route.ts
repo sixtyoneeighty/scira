@@ -451,9 +451,31 @@ export async function POST(req: Request) {
                                 }
                             });
 
+                            // Create a dedicated response section
+                            const llmResponse = createMarkdownResponse({
+                                summary: 'AI Analysis and Response',
+                                details: {
+                                    'Direct Answer': searchResults
+                                        .filter(result => !result.error && result.answer)
+                                        .map(result => result.answer)
+                                        .join('\n\n'),
+                                    'Analysis': searchResults
+                                        .filter(result => !result.error)
+                                        .flatMap(result => result.results)
+                                        .map(r => r.content)
+                                        .join('\n\n'),
+                                    'Key Insights': searchResults
+                                        .filter(result => !result.error)
+                                        .map(result => result.results[0]?.summary || '')
+                                        .filter(Boolean)
+                                        .join('\n\n')
+                                }
+                            });
+
                             return {
                                 searches: searchResults,
-                                markdown
+                                markdown,
+                                llmResponse
                             };
                         } catch (error) {
                             console.error('Web search error:', error);
