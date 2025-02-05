@@ -8,7 +8,7 @@ import { Button } from '../ui/button';
 import { Textarea } from '../ui/textarea';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "./hover-card"
 import useWindowSize from '@/hooks/use-window-size';
-import { X, Zap, ScanEye } from 'lucide-react';
+import { X, Zap, ScanEye, ChevronDown } from 'lucide-react';
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -24,8 +24,7 @@ interface ModelSwitcherProps {
 }
 
 const models = [
-    { value: "gemini-2.0-flash-thinking-exp", label: "Mojo", icon: Zap, description: "Just Mojo being Mojo", color: "glossyblack", vision: false },
-    { value: "gemini-2.0-flash-thinking-exp-01-21", icon: ScanEye, label: "MojoVision", description: "Most intelligent vision model", color: "offgray", vision: true },
+    { value: "gemini-2.0-flash-thinking-exp", label: "Mojo", icon: Zap, description: "Just Mojo being Mojo", color: "glossyblack", vision: true },
 ];
 
 const getColorClasses = (color: string, isSelected: boolean = false) => {
@@ -417,12 +416,56 @@ const SelectionContent = ({ ...props }) => {
     );
 };
 
-const GroupSelector = ({ selectedGroup, onGroupSelect }: GroupSelectorProps) => {
+interface SearchGroupConfig {
+    id: SearchGroupId;
+    name: string;
+    description: string;
+    icon: LucideIcon;
+}
+
+const GroupSelector = ({ selectedGroup, onGroupSelect }: { selectedGroup: SearchGroupId, onGroupSelect: (group: SearchGroupId) => void }) => {
+    const currentGroup = searchGroups[selectedGroup] as SearchGroupConfig;
+    
     return (
-        <SelectionContent
-            selectedGroup={selectedGroup}
-            onGroupSelect={onGroupSelect}
-        />
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button
+                    variant="outline"
+                    size="sm"
+                    className={cn(
+                        "h-8 gap-2 bg-white dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300",
+                        "hover:bg-neutral-300 dark:hover:bg-neutral-600",
+                        "min-w-[120px] justify-between"
+                    )}
+                >
+                    <div className="flex items-center gap-2 truncate">
+                        {currentGroup.icon && (
+                            <div className="h-4 w-4 flex-shrink-0">
+                                {React.createElement(currentGroup.icon)}
+                            </div>
+                        )}
+                        <span className="truncate">{currentGroup.name}</span>
+                    </div>
+                    <ChevronDown className="h-4 w-4 opacity-50" />
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-[200px]">
+                {(Object.entries(searchGroups) as [SearchGroupId, SearchGroupConfig][]).map(([id, group]) => (
+                    <DropdownMenuItem
+                        key={id}
+                        onClick={() => onGroupSelect(id)}
+                        className="flex items-center gap-2 cursor-pointer"
+                    >
+                        {group.icon && (
+                            <div className="h-4 w-4 flex-shrink-0">
+                                {React.createElement(group.icon)}
+                            </div>
+                        )}
+                        <span className="truncate">{group.name}</span>
+                    </DropdownMenuItem>
+                ))}
+            </DropdownMenuContent>
+        </DropdownMenu>
     );
 };
 
@@ -588,7 +631,6 @@ const FormComponent: React.FC<FormComponentProps> = ({
     }, []);
 
     return (
-
         <div className={cn(
             "relative w-full flex flex-col gap-2 rounded-lg transition-all duration-300 !font-sans",
             hasSubmitted ?? "z-[51]",
@@ -601,7 +643,6 @@ const FormComponent: React.FC<FormComponentProps> = ({
 
             {(attachments.length > 0 || uploadQueue.length > 0) && (
                 <div className="flex flex-row gap-2 overflow-x-auto py-2 max-h-32 z-10">
-                    {/* Existing attachment previews */}
                     {attachments.map((attachment, index) => (
                         <AttachmentPreview
                             key={attachment.url}
@@ -669,33 +710,26 @@ const FormComponent: React.FC<FormComponentProps> = ({
                     isLoading ? "!opacity-20 !cursor-not-allowed" : ""
                 )}>
                     <div className="flex items-center gap-2">
-                        {!hasSubmitted ?
+                        {!hasSubmitted && (
                             <GroupSelector
                                 selectedGroup={selectedGroup}
                                 onGroupSelect={handleGroupSelect}
                             />
-                            : null
-                        }
-                        <ModelSwitcher
-                            selectedModel={selectedModel}
-                            setSelectedModel={setSelectedModel}
-                        />
+                        )}
                     </div>
 
                     <div className="flex items-center gap-2">
-                        {hasVisionSupport(selectedModel) && (
-                            <Button
-                                className="rounded-full p-1.5 h-8 w-8 bg-white dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-300 dark:hover:bg-neutral-600"
-                                onClick={(event) => {
-                                    event.preventDefault();
-                                    triggerFileInput();
-                                }}
-                                variant="outline"
-                                disabled={isLoading}
-                            >
-                                <PaperclipIcon size={14} />
-                            </Button>
-                        )}
+                        <Button
+                            className="rounded-full p-1.5 h-8 w-8 bg-white dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-300 dark:hover:bg-neutral-600"
+                            onClick={(event) => {
+                                event.preventDefault();
+                                triggerFileInput();
+                            }}
+                            variant="outline"
+                            disabled={isLoading}
+                        >
+                            <PaperclipIcon size={14} />
+                        </Button>
 
                         {isLoading ? (
                             <Button
