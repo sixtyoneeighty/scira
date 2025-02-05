@@ -1190,36 +1190,10 @@ Excited to annouce that Mojo and sixtyoneeighty have partnered with Vercel to br
                 <section className="space-y-4 font-syne">
                     <h2 className="text-2xl font-medium mt-2">Welcome to Mojo</h2>
                     <p className="text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                        Mojo (Formerly MiniPerplx) is an minimalistic AI-powered search engine that combines multiple data sources to provide comprehensive answers. The name &lsquo;Mojo&rsquo; is derived from the Latin word &lsquo;scire&rsquo;, meaning &lsquo;to know&rsquo; - reflecting our mission to make knowledge accessible and intuitive.
+                        Mojo is a minimalistic AI-powered search engine that combines multiple data sources to provide comprehensive answers.  Inspired by The Simpsons and born from a late-night AI epiphany, Mojo is the heart of sixtyoneeighty. What started as a joke—calling AI a “digital helper monkey”—evolved into something bigger: a bold, opinionated, and endlessly loyal AI companion. Mojo doesn’t sugarcoat things. He tells it like it is, pushes boundaries, and always has your back. Whether he’s powering our applications or helping users navigate the chaos of information, Mojo is more than just code—he’s a friend, a guide, and the kind of AI that never holds back.
                     </p>
-                    <div className="flex flex-row items-center gap-2 h-8">
-                        <Link
-                            href="https://git.new/scira"
-                            className="inline-flex h-8 items-center gap-1.5 px-3 py-1.5 text-xs rounded-md bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors no-underline"
-                        >
-                            <GithubLogo className="h-3.5 w-3.5" />
-                            <span className="font-medium">View on GitHub</span>
-                        </Link>
-                        <Link
-                            href="https://x.com/sciraai"
-                            className="inline-flex h-8 items-center gap-1.5 px-3 py-1.5 text-xs rounded-md bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors no-underline"
-                        >
-                            <XLogo className="h-3.5 w-3.5" />
-                            <span className="font-medium">Follow on X</span>
-                        </Link>
-                        <a
-                            href="https://www.producthunt.com/posts/scira?embed=true&utm_source=badge-featured&utm_medium=badge&utm_souce=badge-scira"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center hover:opacity-90 transition-opacity"
-                        >
-                            <img
-                                src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=776449&theme=light&t=1736847508935"
-                                alt="Mojo - A minimalistic open-source AI-powered search engine | Product Hunt"
-                                className="h-8"
-                            />
-                        </a>
-                    </div>
+                   
+                    
                 </section>
 
                 <Separator className="bg-neutral-200 dark:bg-neutral-800" />
@@ -1252,7 +1226,7 @@ Excited to annouce that Mojo and sixtyoneeighty have partnered with Vercel to br
                     <div className="bg-neutral-50 dark:bg-neutral-900 p-4 rounded-lg border border-neutral-200 dark:border-neutral-800">
                         <div className="flex items-center gap-2 text-sm">
                             <span className="text-primary">→</span>
-                            Built with Next.js, Vercel AI SDK, and Powered by xAI&apos;s Grok 2.0
+                            Built with Next.js, Vercel AI SDK, and Powered by Mojo.
                         </div>
                     </div>
                 </section>
@@ -1332,18 +1306,6 @@ Excited to annouce that Mojo and sixtyoneeighty have partnered with Vercel to br
                     </Link>
                 </div>
                 <div className='flex items-center space-x-4'>
-                    <Link
-                        target="_blank"
-                        href="https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fzaidmukaddam%2Fscira&env=XAI_API_KEY,UPSTASH_REDIS_REST_URL,UPSTASH_REDIS_REST_TOKEN,AVIATION_STACK_API_KEY,SANDBOX_TEMPLATE_ID,TMDB_API_KEY,NEXT_PUBLIC_POSTHOG_KEY,NEXT_PUBLIC_POSTHOG_HOST,YT_ENDPOINT,EXA_API_KEY,TRIPADVISOR_API_KEY,BLOB_READ_WRITE_TOKEN,ELEVENLABS_API_KEY,AZURE_TRANSLATOR_LOCATION,AZURE_TRANSLATOR_KEY,AZURE_RESOURCE_NAME,AZURE_API_KEY,MAPBOX_ACCESS_TOKEN,NEXT_PUBLIC_MAPBOX_TOKEN,FIRECRAWL_API_KEY,TAVILY_API_KEY,OPENWEATHER_API_KEY,E2B_API_KEY,GOOGLE_MAPS_API_KEY,NEXT_PUBLIC_GOOGLE_MAPS_API_KEY&envDescription=All%20environment%20variables%20needed%20for%20application"
-                        className="flex flex-row gap-2 items-center py-1.5 px-2 rounded-md 
-                            bg-white/70 hover:bg-white/90 dark:bg-neutral-800/70 dark:hover:bg-neutral-800/90
-                            backdrop-blur-sm text-neutral-950 dark:text-zinc-50 shadow-sm text-sm
-                            transition-all duration-200"
-                    >
-                        <VercelIcon size={14} />
-                        <span className='hidden sm:block'>Deploy with Vercel</span>
-                        <span className='sm:hidden block'>Deploy</span>
-                    </Link>
                     <AboutButton />
                     <ThemeToggle />
                 </div>
@@ -1731,22 +1693,9 @@ Excited to annouce that Mojo and sixtyoneeighty have partnered with Vercel to br
                         <div className="text-sm text-neutral-500 dark:text-neutral-400">
                             © {new Date().getFullYear()} All rights reserved.
                         </div>
-                        <TooltipProvider>
-                            <div className="flex items-center gap-4">
-                                <TooltipButton
-                                    href="https://peerlist.io/zaidmukaddam"
-                                    tooltip="Follow on Peerlist"
-                                >
-                                    <PeerlistLogo />
-                                </TooltipButton>
-                                <TooltipButton
-                                    href="https://x.com/zaidmukaddam"
-                                    tooltip="Follow on X"
-                                >
-                                    <XLogo className='size-5' />
-                                </TooltipButton>
-                            </div>
-                        </TooltipProvider>
+                        <div className="footer">
+                            © {new Date().getFullYear()} All rights reserved.
+                        </div>
                     </footer>
                 )}
             </div>
