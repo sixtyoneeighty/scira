@@ -219,11 +219,19 @@ export async function POST(req: Request) {
             messages: convertToCoreMessages(messages),
             experimental_transform: smoothStream({
                 chunking: 'word',
-                delayInMs: 15,
+                delayInMs: 25,        // Slightly increased delay for better readability
             }),
-            temperature: 0,
+            temperature: 0.7,  // Increase creativity while maintaining coherence
             experimental_activeTools: [...activeTools],
-            system: systemPrompt,
+            system: systemPrompt + `\n\nImportant Response Guidelines:
+- Always provide detailed analysis of tool results
+- Use natural, conversational language
+- Include specific examples and details
+- Organize information in clear sections
+- Explain your reasoning and insights
+- Make connections between different pieces of information
+- Offer relevant suggestions or recommendations
+- Use markdown formatting for better readability`,
             tools: {
                 stock_chart: tool({
                     description: 'Write and execute Python code to find stock data and generate a stock chart.',
@@ -331,150 +339,87 @@ export async function POST(req: Request) {
                     },
                 }),
                 web_search: tool({
-                    description: 'Search the web for information with multiple queries, max results and search depth.',
+                    description: 'Search the web using Perplexity API for detailed, contextual information.',
                     parameters: z.object({
-                        queries: z.array(z.string().describe('Array of search queries to look up on the web.')),
-                        maxResults: z.array(
-                            z.number().describe('Array of maximum number of results to return per query.').default(10),
-                        ),
-                        topics: z.array(
-                            z.enum(['general', 'news']).describe('Array of topic types to search for.').default('general'),
-                        ),
-                        searchDepth: z.array(
-                            z.enum(['basic', 'advanced']).describe('Array of search depths to use.').default('basic'),
-                        ),
-                        exclude_domains: z
-                            .array(z.string())
-                            .describe('A list of domains to exclude from all search results.')
-                            .default([]),
+                        query: z.string().describe('The search query'),
+                        focus: z.enum(['writing', 'analysis', 'coding', 'math', 'general']).optional()
+                            .describe('Focus area for the search').default('general'),
+                        mode: z.enum(['concise', 'detailed']).optional()
+                            .describe('Response detail level').default('detailed'),
                     }),
-                    execute: async ({
-                        queries,
-                        maxResults,
-                        topics,
-                        searchDepth,
-                        exclude_domains,
-                    }: {
-                        queries: string[];
-                        maxResults: number[];
-                        topics: ('general' | 'news')[];
-                        searchDepth: ('basic' | 'advanced')[];
-                        exclude_domains?: string[];
-                    }) => {
+                    execute: async ({ query, focus = 'general', mode = 'detailed' }) => {
                         try {
-                            if (!serverEnv.TAVILY_API_KEY) {
-                                throw new Error('TAVILY_API_KEY is not configured');
+                            if (!serverEnv.PERPLEXITY_API_KEY) {
+                                throw new Error('PERPLEXITY_API_KEY is not configured');
                             }
 
-                            const apiKey = serverEnv.TAVILY_API_KEY;
-                            const tvly = tavily({ apiKey });
-                            const includeImageDescriptions = true;
+                            const response = await fetch('https://api.perplexity.ai/chat/completions', {
+                                method: 'POST',
+                                headers: {
+                                    'Accept': 'application/json',
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${serverEnv.PERPLEXITY_API_KEY}`
+                                },
+                                body: JSON.stringify({
+                                    model: mode === 'detailed' ? 'sonar-medium-online' : 'sonar-small-online',
+                                    messages: [
+                                        {
+                                            role: 'system',
+                                            content: `You are a web search assistant focused on ${focus}. 
+                                            Provide ${mode} responses with accurate, up-to-date information.
+                                            Include sources and citations when available.
+                                            Focus on extracting key insights and making connections between different pieces of information.`
+                                        },
+                                        {
+                                            role: 'user',
+                                            content: query
+                                        }
+                                    ],
+                                    options: {
+                                        search_queries: true,
+                                        follow_up_questions: true
+                                    }
+                                })
+                            });
 
-                            console.log('Queries:', queries);
-                            console.log('Max Results:', maxResults);
-                            console.log('Topics:', topics);
-                            console.log('Search Depths:', searchDepth);
-                            console.log('Exclude Domains:', exclude_domains);
+                            if (!response.ok) {
+                                throw new Error(`Perplexity API error: ${response.status} ${response.statusText}`);
+                            }
 
-                            // Execute searches in parallel with individual error handling
-                            const searchPromises = queries.map(async (query, index) => {
-                                try {
-                                    const data = await tvly.search(query, {
-                                        topic: topics[index] || topics[0] || 'general',
-                                        days: topics[index] === 'news' ? 7 : undefined,
-                                        maxResults: maxResults[index] || maxResults[0] || 10,
-                                        searchDepth: searchDepth[index] || searchDepth[0] || 'basic',
-                                        includeAnswer: true,
-                                        includeImages: true,
-                                        includeImageDescriptions: includeImageDescriptions,
-                                        excludeDomains: exclude_domains,
-                                    });
+                            const data = await response.json();
 
-                                    // Process images with error handling
-                                    const processedImages = includeImageDescriptions
-                                        ? await Promise.all(
-                                              data.images.map(async ({ url, description }: { url: string; description?: string }) => {
-                                                  try {
-                                                      const sanitizedUrl = sanitizeUrl(url);
-                                                      const isValid = await isValidImageUrl(sanitizedUrl);
+                            // Process and structure the response
+                            const result = {
+                                answer: data.choices[0].message.content,
+                                search_queries: data.search_queries || [],
+                                sources: data.sources || [],
+                                follow_up_questions: data.follow_up_questions || [],
+                                metadata: {
+                                    model: data.model,
+                                    focus,
+                                    mode,
+                                    timestamp: new Date().toISOString()
+                                }
+                            };
 
-                                                      return isValid
-                                                          ? {
-                                                                url: sanitizedUrl,
-                                                                description: description ?? '',
-                                                            }
-                                                          : null;
-                                                  } catch (error) {
-                                                      console.error(`Error processing image ${url}:`, error);
-                                                      return null;
-                                                  }
-                                              }),
-                                          ).then((results) =>
-                                              results.filter(
-                                                  (
-                                                      image,
-                                                  ): image is {
-                                                      url: string;
-                                                      description: string;
-                                                  } =>
-                                                      image !== null &&
-                                                      typeof image === 'object' &&
-                                                      typeof image.description === 'string' &&
-                                                      image.description !== '',
-                                              ),
-                                          )
-                                        : await Promise.all(
-                                              data.images.map(async ({ url }: { url: string }) => {
-                                                  try {
-                                                      const sanitizedUrl = sanitizeUrl(url);
-                                                      return (await isValidImageUrl(sanitizedUrl)) ? sanitizedUrl : null;
-                                                  } catch (error) {
-                                                      console.error(`Error processing image ${url}:`, error);
-                                                      return null;
-                                                  }
-                                              }),
-                                          );
-
-                                    return {
-                                        query,
-                                        results: data.results.map((obj: any) => ({
-                                            url: obj.url,
-                                            title: obj.title,
-                                            content: obj.content,
-                                            raw_content: obj.raw_content,
-                                            published_date: topics[index] === 'news' ? obj.published_date : undefined,
-                                        })),
-                                        images: processedImages.filter(Boolean),
-                                    };
-                                } catch (error) {
-                                    console.error(`Error processing query "${query}":`, error);
-                                    return {
-                                        query,
-                                        results: [],
-                                        images: [],
-                                        error: error instanceof Error ? error.message : 'An unknown error occurred',
-                                    };
+                            // Create a markdown-formatted response
+                            const markdown = createMarkdownResponse({
+                                summary: 'Search Results',
+                                details: {
+                                    'Main Answer': result.answer,
+                                    'Sources': result.sources.map((source: any) => `- [${source.title}](${source.url})`),
+                                    'Related Questions': result.follow_up_questions,
+                                    'Search Context': `Focus: ${focus}, Mode: ${mode}`
                                 }
                             });
 
-                            const searchResults = await Promise.all(searchPromises);
-
-                            // Check if all searches failed
-                            const allFailed = searchResults.every((result) => result.error);
-                            if (allFailed) {
-                                throw new Error('All search queries failed to execute');
-                            }
-
                             return {
-                                searches: searchResults,
+                                ...result,
+                                markdown
                             };
                         } catch (error) {
-                            console.error('Web search error:', error);
-                            throw new Error(
-                                error instanceof Error
-                                    ? `Web search failed: ${error.message}`
-                                    : 'Web search failed: An unknown error occurred',
-                            );
+                            console.error('Perplexity search error:', error);
+                            throw error;
                         }
                     },
                 }),
